@@ -16,5 +16,17 @@
 ;You should have received a copy of the GNU General Public License
 ;along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-extern drive
-mov [drive], dl
+[BITS 16]
+
+jmp 0x7C0:start ;set code segment to 0x7C0
+
+start:
+
+mov ax, cs
+mov ds, ax ;set up data segment
+
+mov ax, 0x50
+mov ss, ax
+mov sp, 0xFFFF ;set up initial stack space
+
+%include "drv/storage/init.asm" ;save drive number

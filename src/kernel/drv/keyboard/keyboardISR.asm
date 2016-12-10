@@ -16,5 +16,20 @@
 ;You should have received a copy of the GNU General Public License
 ;along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-extern drive
-mov [drive], dl
+[BITS 16]
+
+extern keyboardHandler
+global keyboardISR
+
+keyboardISR:
+
+	cli
+
+	call dword keyboardHandler
+
+	mov al, 0x20
+	out 0x20, al
+
+	sti
+
+iret

@@ -16,5 +16,14 @@
 ;You should have received a copy of the GNU General Public License
 ;along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-extern drive
-mov [drive], dl
+[BITS 16]
+
+extern breakpointHandler
+global breakpointISR
+
+breakpointISR:
+
+	sti
+	call dword breakpointHandler
+
+iret

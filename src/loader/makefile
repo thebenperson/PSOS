@@ -16,23 +16,21 @@
 #You should have received a copy of the GNU General Public License
 #along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-FLAGS := -Isrc -f bin
+all: loader.bin clean
 
-all: PSOS.bin clean
+loader.bin: loaderStub.o loader.o drv.o
+	ld -melf_i386 -T loader.ld
 
-PSOS.bin: loader.bin kernel.bin
-	cat bin/loader.bin bin/kernel.bin > bin/$@
+loaderStub.o: loaderStub.asm
+	nasm -f elf $^
 
-loader.bin:
-	make -C src/loader
+loader.o: loader.c
+	gcc -I.. -c -masm=intel $^ -m16 -Os -nostdlib
 
-kernel.bin:
-	make -C src/kernel
+drv.o:
+	make -C drv
 
-fs.bin: src/fs/fs.asm
-	make -C src/fs/prg
-	nasm $(FLAGS) -Isrc/fs $^ -o bin/$@
 
 .PHONY: clean
 clean:
-	rm bin/loader.bin bin/kernel.bin
+	rm *.o

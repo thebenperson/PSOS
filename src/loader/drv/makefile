@@ -16,23 +16,16 @@
 #You should have received a copy of the GNU General Public License
 #along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-FLAGS := -Isrc -f bin
+all: drv.o clean
 
-all: PSOS.bin clean
+drv.o: storage.o vga.o
+	ld -melf_i386 -r $^ -o $@
 
-PSOS.bin: loader.bin kernel.bin
-	cat bin/loader.bin bin/kernel.bin > bin/$@
+storage.o: storage/storage.c
+	gcc -I../.. -c -masm=intel $^ -m16 -Os -nostdlib
 
-loader.bin:
-	make -C src/loader
+vga.o: vga/vga.c
+	gcc -I../.. -c -masm=intel $^ -m16 -Os -nostdlib
 
-kernel.bin:
-	make -C src/kernel
-
-fs.bin: src/fs/fs.asm
-	make -C src/fs/prg
-	nasm $(FLAGS) -Isrc/fs $^ -o bin/$@
-
-.PHONY: clean
 clean:
-	rm bin/loader.bin bin/kernel.bin
+	rm storage.o vga.o

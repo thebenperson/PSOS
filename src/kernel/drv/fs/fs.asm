@@ -1,4 +1,4 @@
-;PSOS Version 1.0
+;PSOS Development Build
 ;Copyright (C) 2016 Ben Stockett.
 
 ;This file is part of PSOS (Pretty Simple/Stupid Operating System).

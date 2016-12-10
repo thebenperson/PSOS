@@ -16,23 +16,26 @@
 #You should have received a copy of the GNU General Public License
 #along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-FLAGS := -Isrc -f bin
+all: drv.o
 
-all: PSOS.bin clean
+drv.o: keyboard.o pit.o storage.o vga.o
+	ld -melf_i386 -r $^ -o $@
+	rm keyboard.o pit.o storage.o vga.o
 
-PSOS.bin: loader.bin kernel.bin
-	cat bin/loader.bin bin/kernel.bin > bin/$@
+keyboard.o: keyboard/keyboard.c
+	gcc -I.. -I. -I../.. -c -masm=intel $^ -m16 -nostdlib -o keyboardc.o
+	nasm -f elf keyboard/keyboardISR.asm -o keyboardISR.o
+	ld -melf_i386 -r keyboardc.o keyboardISR.o -o keyboard.o
+	rm keyboardc.o keyboardISR.o
 
-loader.bin:
-	make -C src/loader
+pit.o: pit/pit.c
+	gcc -I. -I.. -I../.. -c -masm=intel $^ -m16 -nostdlib -o pitc.o
+	nasm -f elf pit/pitISR.asm -o pitISR.o
+	ld -melf_i386 -r pitc.o pitISR.o -o pit.o
+	rm pitc.o pitISR.o
 
-kernel.bin:
-	make -C src/kernel
+storage.o: storage/storage.c
+	gcc -I../.. -c -masm=intel $^ -m16 -nostdlib
 
-fs.bin: src/fs/fs.asm
-	make -C src/fs/prg
-	nasm $(FLAGS) -Isrc/fs $^ -o bin/$@
-
-.PHONY: clean
-clean:
-	rm bin/loader.bin bin/kernel.bin
+vga.o: vga/vga.c
+	gcc -I../.. -c -masm=intel $^ -m16 -nostdlib

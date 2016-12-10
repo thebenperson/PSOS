@@ -16,23 +16,16 @@
 #You should have received a copy of the GNU General Public License
 #along with PSOS.  If not, see <http://www.gnu.org/licenses/>.
 
-FLAGS := -Isrc -f bin
+all: kernel.bin
 
-all: PSOS.bin clean
+kernel.bin: kernel.o drv.o
+	ld -melf_i386 -T kernel.ld
+	rm *.o
 
-PSOS.bin: loader.bin kernel.bin
-	cat bin/loader.bin bin/kernel.bin > bin/$@
+kernel.o: kernel.c
+	gcc -I.. -c -masm=intel $^ -m16 -nostdlib -o kernelc.o
+	nasm -f elf breakpointISR.asm
+	ld -melf_i386 -r kernelc.o breakpointISR.o -o kernel.o
 
-loader.bin:
-	make -C src/loader
-
-kernel.bin:
-	make -C src/kernel
-
-fs.bin: src/fs/fs.asm
-	make -C src/fs/prg
-	nasm $(FLAGS) -Isrc/fs $^ -o bin/$@
-
-.PHONY: clean
-clean:
-	rm bin/loader.bin bin/kernel.bin
+drv.o:
+	make -C drv

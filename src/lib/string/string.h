@@ -25,57 +25,12 @@ SOFTWARE.
 
 */
 
+#ifndef HG_Kernel_String_H
+
 #include "types.h"
 
-byte drive = 0x80;
+extern bool strCmp(ptr str1, ptr str2);
+extern byte strLen(ptr string);
 
-dword cylinders;
-dword heads;
-double sectors;
-dword sectorsPerTrack;
-
-void initStorage() {
-
-	byte result[30];
-
-	#asm
-
-		mov ah, #0x48
-		mov dl, [_drive]
-		//mov si, bp - 1
-		int 0x13 //get disk geometry
-
-	#endasm
-
-	cylinders = result[4];
-	heads = result[8];
-	sectors = result[16];
-	sectorsPerTrack = result[12];
-
-}
-
-bool loadSector(byte start, byte length, word segment, word offset) {
-
-	bool result;
-
-	#asm
-
-		mov cl, [bp + 4]
-		mov al, [bp + 6]
-		mov bx, [bp + 8]
-		mov es, bx
-		mov bx, [bp + 10]
-
-		mov ah, #0x2
-		xor ch, ch
-		xor dh, dh
-		mov dl, [_drive]
-
-		int 0x13
-		setc [bp - 2]
-
-	#endasm
-
-	return result ? false : true;
-
-}
+#define HG_Kernel_String_H
+#endif

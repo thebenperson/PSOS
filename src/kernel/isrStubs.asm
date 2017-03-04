@@ -23,23 +23,21 @@
 
 [BITS 16]
 
-section .text
+extern _breakpointHandler
+global _breakpointISR
 
-global _main
-_main:
+_breakpointISR:
 
-jmp 0x7C0:start ;set code segment to 0x7C0
+	sti
+	call _breakpointHandler
 
-start:
+iret
 
-mov ax, cs
-mov ds, ax ;set up data segment
+extern _sysCallHandler
+global _sysCallISR
 
-mov ax, 0x50
-mov ss, ax
-mov sp, 0xFFFF ;set up initial stack space
+_sysCallISR:
 
-%include "drv/storage/init.asm" ;save drive number
+	call _sysCallHandler
 
-extern _loaderMain
-jmp _loaderMain
+iret

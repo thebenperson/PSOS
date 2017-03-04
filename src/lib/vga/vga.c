@@ -25,57 +25,53 @@ SOFTWARE.
 
 */
 
+#include "kernel/drv/vga/vga.h"
+#include "kernel/kernel.h"
 #include "types.h"
 
-byte drive = 0x80;
+void clearText() {
 
-dword cylinders;
-dword heads;
-double sectors;
-dword sectorsPerTrack;
-
-void initStorage() {
-
-	byte result[30];
-
-	#asm
-
-		mov ah, #0x48
-		mov dl, [_drive]
-		//mov si, bp - 1
-		int 0x13 //get disk geometry
-
-	#endasm
-
-	cylinders = result[4];
-	heads = result[8];
-	sectors = result[16];
-	sectorsPerTrack = result[12];
+	asm("int 0x20" :: "a" (VGA | (CLEAR_TEXT << 8)));
 
 }
 
-bool loadSector(byte start, byte length, word segment, word offset) {
+void printString(ptr string) {
 
-	bool result;
+	asm("" :: "a" (VGA | (PRINT_STRING << 8)));
+	asm("int 0x20" :: "S" (string));
 
-	#asm
+}
 
-		mov cl, [bp + 4]
-		mov al, [bp + 6]
-		mov bx, [bp + 8]
-		mov es, bx
-		mov bx, [bp + 10]
+void scroll() {
 
-		mov ah, #0x2
-		xor ch, ch
-		xor dh, dh
-		mov dl, [_drive]
+	asm("int 0x20" :: "a" (VGA | (SCROLL << 8)));
 
-		int 0x13
-		setc [bp - 2]
+}
 
-	#endasm
+void setCharAttr(byte attr) {
 
-	return result ? false : true;
+	asm("" :: "a" (VGA | (SET_ATTR << 8)));
+	asm("int 0x20" :: "b" (attr));
+
+}
+
+void setCharPos(byte X, byte Y) {
+
+	asm("" :: "a" (VGA | (SET_POS << 8)));
+	asm("int 0x20" :: "b" (X | (Y << 8)));
+
+}
+
+void setCursor(bool enabled) {
+
+	asm("" :: "a" (VGA | (SET_CURSOR << 8)));
+	asm("int 0x20" :: "b" (enabled));
+
+}
+
+void setVGAMode(byte mode) {
+
+	asm("" :: "a" (VGA | (SET_MODE << 8)));
+	asm("int 0x20" :: "b" (mode));
 
 }

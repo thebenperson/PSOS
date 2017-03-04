@@ -27,55 +27,25 @@ SOFTWARE.
 
 #include "types.h"
 
-byte drive = 0x80;
+bool strcmp(char* str1, char* str2) {
 
-dword cylinders;
-dword heads;
-double sectors;
-dword sectorsPerTrack;
+	byte strLen = strlen(str1);
 
-void initStorage() {
+	if (strLen != strlen(str2)) return false;
 
-	byte result[30];
+	for (byte i = 0; i < strLen; i++)
+		if (((char*) str1)[i] != ((char*) str2)[i]) return false;
 
-	#asm
-
-		mov ah, #0x48
-		mov dl, [_drive]
-		//mov si, bp - 1
-		int 0x13 //get disk geometry
-
-	#endasm
-
-	cylinders = result[4];
-	heads = result[8];
-	sectors = result[16];
-	sectorsPerTrack = result[12];
+	return true;
 
 }
 
-bool loadSector(byte start, byte length, word segment, word offset) {
+byte strlen(char* string) {
 
-	bool result;
+	byte strlen = 0;
 
-	#asm
+	while (((char*) string)[strlen++] != '\0') {}
 
-		mov cl, [bp + 4]
-		mov al, [bp + 6]
-		mov bx, [bp + 8]
-		mov es, bx
-		mov bx, [bp + 10]
-
-		mov ah, #0x2
-		xor ch, ch
-		xor dh, dh
-		mov dl, [_drive]
-
-		int 0x13
-		setc [bp - 2]
-
-	#endasm
-
-	return result ? false : true;
+	return strlen;
 
 }

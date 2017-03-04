@@ -22,33 +22,8 @@
 #SOFTWARE.
 
 BIN := ../../bin
-CFLAGS := -I. -I.. -I/usr/include -I/usr/include/unistring -ansi
-LFLAGS := -c -Mc
 
-all: kernel.bin
+all: math.o
 
-kernel.bin: keyboard.o pit.o storage.o vga.o
-	bcc $(CFLAGS) kernel.c $(LFLAGS) -o kernelc.o
-	nasm -f as86 isrStubs.asm
-	ld86 -r kernelc.o isrStubs.o -o kernel.o
-	ld86 -d kernel.o $^ $(BIN)/math.o -o kernel.bin
-	objcopy -I binary kernel.bin -Bi386 -O elf32-i386 kernel.o
-	ld -melf_i386 -Tkernel.ld -o kernel.bin
-	rm *.o
-	mv kernel.bin $(BIN)/.
-
-keyboard.o:
-	bcc $(CFLAGS) drv/keyboard/keyboard.c $(LFLAGS) -o keyboardc.o
-	nasm -f as86 drv/keyboard/keyboardISR.asm -o keyboardISR.o
-	ld86 -r keyboardc.o keyboardISR.o -o $@
-
-pit.o:
-	bcc $(CFLAGS) drv/pit/pit.c $(LFLAGS) -o pitc.o
-	nasm -f as86 drv/pit/pitISR.asm -o pitISR.o
-	ld86 -r pitc.o pitISR.o -o $@
-
-storage.o:
-	bcc $(CFLAGS) drv/storage/storage.c $(LFLAGS) -o storage.o
-
-vga.o:
-	bcc $(CFLAGS) drv/vga/vga.c $(LFLAGS) -o vga.o
+math.o: math/math.asm
+	nasm $^ -f as86 -o $(BIN)/$@

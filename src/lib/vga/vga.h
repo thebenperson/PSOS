@@ -25,57 +25,37 @@ SOFTWARE.
 
 */
 
+#ifndef HG_LIB_VGA_H
+
 #include "types.h"
 
-byte drive = 0x80;
+#define ATTR_BLINK 0x80
+#define ATTR_BOLD 0x80
 
-dword cylinders;
-dword heads;
-double sectors;
-dword sectorsPerTrack;
+#define BG_BLUE 0x10
+#define BG_CYAN 0x30
+#define BG_GREEN 0x20
+#define BG_MAGENTA 0x50
+#define BG_RED 0x40
+#define BG_WHITE 0x70
+#define BG_YELLOW 0x60
 
-void initStorage() {
+#define FG_BLUE 0x1
+#define FG_CYAN 0x3
+#define FG_GREEN 0x2
+#define FG_MAGENTA 0xA
+#define FG_RED 0x4
+#define FG_WHITE 0x7
+#define FG_YELLOW 0x6
 
-	byte result[30];
+extern void clearText();
+extern void initVGA();
+extern void printString(ptr string);
+extern void scroll();
+extern void setCharAttr(byte attr);
+extern void setCharPos(byte X, byte Y);
+extern void setCursor(bool enabled);
+extern void setVGAMode(byte mode);
 
-	#asm
-
-		mov ah, #0x48
-		mov dl, [_drive]
-		//mov si, bp - 1
-		int 0x13 //get disk geometry
-
-	#endasm
-
-	cylinders = result[4];
-	heads = result[8];
-	sectors = result[16];
-	sectorsPerTrack = result[12];
-
-}
-
-bool loadSector(byte start, byte length, word segment, word offset) {
-
-	bool result;
-
-	#asm
-
-		mov cl, [bp + 4]
-		mov al, [bp + 6]
-		mov bx, [bp + 8]
-		mov es, bx
-		mov bx, [bp + 10]
-
-		mov ah, #0x2
-		xor ch, ch
-		xor dh, dh
-		mov dl, [_drive]
-
-		int 0x13
-		setc [bp - 2]
-
-	#endasm
-
-	return result ? false : true;
-
-}
+#define HG_LIB_VGA_H
+#endif

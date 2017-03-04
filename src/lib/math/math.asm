@@ -23,23 +23,18 @@
 
 [BITS 16]
 
-section .text
+global imod
+global imodu
+imod:
+imodu:
 
-global _main
-_main:
+	push dx
 
-jmp 0x7C0:start ;set code segment to 0x7C0
+	xor dx, dx
+	idiv bx
 
-start:
+	mov ax, dx
 
-mov ax, cs
-mov ds, ax ;set up data segment
+	pop dx
 
-mov ax, 0x50
-mov ss, ax
-mov sp, 0xFFFF ;set up initial stack space
-
-%include "drv/storage/init.asm" ;save drive number
-
-extern _loaderMain
-jmp _loaderMain
+ret

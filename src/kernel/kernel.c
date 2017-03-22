@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,164 +25,174 @@ SOFTWARE.
 
 */
 
-#include "drv/keyboard/keyboard.h"
-#include "drv/pit/pit.h"
-#include "drv/storage/storage.h"
-#include "drv/vga/vga.h"
+#include "arch.h"
+#include "keyboard.h"
+#include "pit.h"
+#include "storage.h"
+#include "vga.h"
 #include "kernel.h"
+#include "math.h"
 #include "types.h"
 
-char versionString[] = "PSOS (Pretty Simple/Stupid Operating System) Development Build\nBen Stockett - 2016\n";
+byte kernelSize;
+byte sysret[14];
+char versionString[] =
+"PSOS (Pretty Simple/Stupid Operating System) Development Build\n"
+"Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>\n";
 
-extern void breakpointISR();
-extern void sysCallISR();
-
-bool exec(char* file);
+bool exec(mem16_t path);
+void getRegs(mem16_t regs);
 void initKernel();
-void installISR(word intNum, void* handler);
-void errDivideByZero();
+void installISR(word num, mem16_t handler);
+void panic(mem16_t reason);
+void syscall(byte call, ...);
 
-void main() {
+extern void brkptISR();
+extern void syscallISR();
 
-	char file[512];
-	bool result;
+__attribute__((noreturn, section(".kmain"))) void kmain() {
 
 	initKernel();
-	charAttr = FG_RED;
-	printString("Loaded kernel.\n\n");
-	printString(versionString);
-	printString("\nReady.\n\n");
+	puts("Loaded kernel.\n\n");
+	puts(versionString);
+	puts("\nReady...\n\n");
 
-	charAttr = FG_GREEN;
-	printString(">>test.txt:\n\n");
+	if (!exec("SH.BIN")) panic("Could not locate SH.BIN");
 
-	result = loadSector(5, 1, KERNEL_SEGMENT, file);
+	puts("System ready for shutdown\nPlease power off and remove boot medium");
 
-	if (result)	printString(file);
-	else printString("Error loading file.");
-
-	#asm
-
-		cli
-		hlt
-
-	#endasm
+	HANG();
 
 }
 
-void breakpointHandler() {
+void brkpt() {
 
-	byte oldCharAttr = charAttr;
+	byte old = charAttr;
 
 	charAttr = BG_WHITE | FG_YELLOW;
 	clearText();
 
-	printString("------------------------------------\n");
-	printString("Breakpoint: press escape to continue\n");
-	printString("------------------------------------\n\n");
+	puts("Breakpoint: press return to continue\n");
 
-	while (!keyState[VK_ESCAPE]) {
+	struct regs regs;
+	getRegs(&regs);
 
-		#asm
+	puts("\nFree mem: ");
+	putn((regs.sp - (kernelSize * 512)) / 1024, false);
+	puts("KiB");
 
-			hlt
+	while (!keyState[VK_RETURN])
+		asm ("hlt");
 
-		#endasm
+	keyState[VK_RETURN] = false;
 
-	}
-
-	charAttr = oldCharAttr;
+	charAttr = old;
 	clearText();
 
 }
 
-void errDivideByZero() {
+bool exec(mem16_t path) {
 
-	#asm
+	File file;
 
-		cli
+	bool result = openFile(path, &file);
+	if (!result) return false;
 
-	#endasm
+	word segment = KERNEL_SEGMENT + (((1 + kernelSize) * 512) / 16);
+	result = loadFile(&file, segment, 0);
 
-	charAttr = BG_RED;
-	clearText();
+	asm("mov ds, %0" :: "a" (segment));
+	asm("mov ss, ax");
 
-	printString("---------------------------------------\n");
-	printString("Fatal error: division by zero at 0x????\n");
-	printString("---------------------------------------");
-
-	#asm
-
-		hlt
-
-	#endasm
+	asm("call 0x8E0:0");
 
 }
-
-/*bool exec(char* file) {
-
-	//readFile(file, );
-
-	return true;
-
-}*/
 
 void initKernel() {
 
-	installISR(0, errDivideByZero);
-	installISR(3, breakpointISR);
+	asm("mov es, %0" :: "a" (0x7C0));
+	asm("mov %0, es:[0x1FD]" : "=r" (kernelSize)); //get kernel size
+
+	installISR(3, brkptISR); //install breakpoint handler
+	installISR(0x20, syscallISR); //install syscall handler
 
 	initKeyboard();
 	initPIT();
+	initStorage();
 	initVGA();
 
 }
 
-void installISR(word intNum, void* handler) {
+void installISR(word num, mem16_t handler) {
 
-	intNum *= 4;
+	num *= 4;
 
-	#asm
+	asm("xor ax, ax");
+	asm("mov es, ax");
 
-		xor ax, ax
-		mov es, ax
-
-		mov bx, [bp + 4]
-		mov ax, [bp + 6]
-
-		seg es
-		mov [bx], ax
-
-		seg es
-		mov [bx + 2], #KERNEL_SEGMENT
-
-	#endasm
+	asm("mov es:[%0], %1" :: "b" (num), "a" (handler));
+	asm("movw es:[bx + 2], %0" :: "i" (KERNEL_SEGMENT));
 
 }
 
-void sysCallHandler(byte driver, byte function) {
+__attribute__((noreturn)) void panic(mem16_t reason) {
 
-	/*switch (driver) {
+	charAttr = BG_RED;
+	clearText();
 
-		case STORAGE:
+	puts("KERNEL PANIC: ");
+	puts(reason);
 
-			switch (function) {
+	HANG();
+
+}
+
+void syscall(byte call, ...) {
+
+	word segment;
+	asm("mov %0, ds" : "=r" (segment));
+
+	asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
+
+	byte subcall = call & 0xF;
+
+	switch (call >> 4) {
+
+		case 0:
+
+			switch (subcall) {
+
+				case 0:
 
 
+				break;
 
 			}
 
 		break;
 
-		case VGA:
+		case 1:
 
-			switch (function) {
+			switch (subcall) {
 
+				case 0:
+
+					asm("call clearText");
+
+				break;
+
+				case 1:
+
+					asm("call puts");
+
+				break;
 
 			}
 
 		break;
 
-	}*/
+	}
+
+	asm("mov ds, %0" :: "a" (segment));
 
 }

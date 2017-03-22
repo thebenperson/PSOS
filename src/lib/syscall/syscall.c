@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,37 +25,11 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_VGA_H
-
+#include "syscall.h"
 #include "types.h"
 
-#define ATTR_BLINK 0x80
-#define ATTR_BOLD 0x80
+void syscall(byte call, ...) {
 
-#define BG_BLUE 0x10
-#define BG_CYAN 0x30
-#define BG_GREEN 0x20
-#define BG_MAGENTA 0x50
-#define BG_RED 0x40
-#define BG_WHITE 0x70
-#define BG_YELLOW 0x60
+	asm("int 0x20");
 
-#define FG_BLUE 0x1
-#define FG_CYAN 0x3
-#define FG_GREEN 0x2
-#define FG_MAGENTA 0xA
-#define FG_RED 0x4
-#define FG_WHITE 0x7
-#define FG_YELLOW 0x6
-
-extern void clearText();
-extern void initVGA();
-extern void printString(ptr string);
-extern void scroll();
-extern void setCharAttr(byte attr);
-extern void setCharPos(byte X, byte Y);
-extern void setCursor(bool enabled);
-extern void setVGAMode(byte mode);
-
-#define HG_LIB_VGA_H
-#endif
+}

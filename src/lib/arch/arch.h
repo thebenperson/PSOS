@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +25,31 @@ SOFTWARE.
 
 */
 
-#include "vga/vga.h"
+#ifndef HG_LIB_Arch_H
 
-void main() {
+#include "types.h"
 
-	printString("Hello World!!\n");
+typedef struct regs {
 
-}
+	word ax;
+	word bx;
+	word cx;
+	word dx;
+
+	word di;
+	word bp;
+	word sp;
+
+	word es;
+	word cs;
+	word ss;
+	word ds;
+	word fs;
+	word gs;
+
+} regs;
+
+void getRegs(mem16_t regs);
+
+#define HG_LIB_Arch_H
+#endif

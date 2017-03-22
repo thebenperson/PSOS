@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,12 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_String_H
+#ifndef HG_LIB_String_H
 
 #include "types.h"
 
-extern bool strCmp(ptr str1, ptr str2);
-extern byte strLen(ptr string);
+extern bool strcmp(mem16_t str1, mem16_t str2);
+extern byte strlen(mem16_t string);
 
-#define HG_Kernel_String_H
+#define HG_LIB_String_H
 #endif

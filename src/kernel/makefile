@@ -1,7 +1,7 @@
 #PSOS Development Build
 #https://github.com/TheBenPerson/PSOS/tree/dev
 
-#Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+#Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,32 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
+export CPATH := $(shell find ../ -type d | tr '\n' ':')
+CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT)
 BIN := ../../bin
-CFLAGS := -I. -I.. -I/usr/include -I/usr/include/unistring -ansi
-LFLAGS := -c -Mc
 
 all: kernel.bin
 
 kernel.bin: keyboard.o pit.o storage.o vga.o
-	bcc $(CFLAGS) kernel.c $(LFLAGS) -o kernelc.o
-	nasm -f as86 isrStubs.asm
-	ld86 -r kernelc.o isrStubs.o -o kernel.o
-	ld86 -d kernel.o $^ $(BIN)/math.o -o kernel.bin
-	objcopy -I binary kernel.bin -Bi386 -O elf32-i386 kernel.o
+	gcc $(CF) kernel.c $(LF) -o kernelc.o
+	nasm -f elf stubs.asm
+	ld kernelc.o stubs.o $(BIN)/arch.o $(BIN)/math.o $(BIN)/string.o $^ -melf_i386 -r -o kernel.o
 	ld -melf_i386 -Tkernel.ld -o kernel.bin
 	rm *.o
 	mv kernel.bin $(BIN)/.
 
 keyboard.o:
-	bcc $(CFLAGS) drv/keyboard/keyboard.c $(LFLAGS) -o keyboardc.o
-	nasm -f as86 drv/keyboard/keyboardISR.asm -o keyboardISR.o
-	ld86 -r keyboardc.o keyboardISR.o -o $@
+	gcc $(CF) drv/keyboard/keyboard.c $(LF) -o keyboardc.o
+	nasm -f elf drv/keyboard/keyboardISR.asm -o keyboardISR.o
+	ld -r keyboardc.o keyboardISR.o -melf_i386 -o $@
 
 pit.o:
-	bcc $(CFLAGS) drv/pit/pit.c $(LFLAGS) -o pitc.o
-	nasm -f as86 drv/pit/pitISR.asm -o pitISR.o
-	ld86 -r pitc.o pitISR.o -o $@
+	gcc $(CF) drv/pit/pit.c $(LF) -o pitc.o
+	nasm -f elf drv/pit/pitISR.asm -o pitISR.o
+	ld -r pitc.o pitISR.o -melf_i386 -o $@
 
 storage.o:
-	bcc $(CFLAGS) drv/storage/storage.c $(LFLAGS) -o storage.o
+	gcc $(CF) drv/storage/storage.c $(LF) -o storage.o
 
 vga.o:
-	bcc $(CFLAGS) drv/vga/vga.c $(LFLAGS) -o vga.o
+	gcc $(CF) drv/vga/vga.c $(LF) -o vga.o

@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ SOFTWARE.
 
 #ifndef HG_Kernel_Keyboard_H
 
-#define VK_ESCAPE 0x0
+#define VK_ESC 0x0
 #define VK_1 0x1
 #define VK_2 0x2
 #define VK_3 0x3
@@ -40,7 +40,7 @@ SOFTWARE.
 #define VK_0 0xA
 #define VK_MINUS 0xB
 #define VK_PLUS 0xC
-#define VK_BACKSPACE 0xD
+#define VK_BKSPACE 0xD
 #define VK_TAB 0xE
 #define VK_Q 0xF
 #define VK_W 0x10
@@ -122,9 +122,9 @@ SOFTWARE.
 
 extern void (*keyCallback)(byte);
 extern char keyMap[174];
-extern bool keyState[87];
+extern volatile bool keyState[87];
 extern void initKeyboard();
-extern char scToChar(byte scanCode);
+extern char toChar(byte scanCode);
 
 #define HG_Kernel_Keyboard_H
 #endif

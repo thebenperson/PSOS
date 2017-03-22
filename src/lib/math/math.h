@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,9 @@ SOFTWARE.
 
 */
 
-INPUT(loader.o)
-OUTPUT_FORMAT(binary)
+#ifndef HG_LIB_Math
 
-SECTIONS {
+extern int pow(int a, int b);
 
-	.bin : {
-
-		loader.o
-
-	}
-
-	.sig : AT(0x1FE) {
-
-		SHORT(0xAA55);
-
-	}
-
-}
+#define HG_LIB_Math
+#endif

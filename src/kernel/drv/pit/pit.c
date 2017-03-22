@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,57 +28,29 @@ SOFTWARE.
 #include "kernel.h"
 #include "types.h"
 
-bool timer = false;
+volatile size_t time = 0;
 
 extern void pitISR();
 
 void initPIT() {
 
-	#asm
+	asm("cli");
 
-		cli
+	asm("out 0x43, %0" :: "a" (0x34));
+	asm("out 0x40, %0" :: "a" (0xA9));
+	asm("out 0x40, %0" :: "a" (0x4));
 
-		mov al, #0x34
-		out #0x43, al
+	installISR(8, &pitISR); //install irq handler
 
-		mov al, #0xA9
-		out #0x40, al
-
-		mov al, #0x4
-		out #0x40, al
-
-	#endasm
-
-	installISR(8, pitISR); //install irq handler
-
-	#asm
-
-		sti
-
-	#endasm
+	asm("sti");
 
 }
 
-void sleep(word mili) {
+void sleep(size_t mili) {
 
-	word count = 0;
-	bool lastTimer = timer;
+	size_t lastTime = time;
 
-	while (count != mili) {
-
-		#asm
-
-			hlt
-
-		#endasm
-
-		if (timer != lastTimer) {
-
-			lastTimer = timer;
-			count++;
-
-		}
-
-	}
+	while ((time - lastTime) < mili)
+		asm("hlt");
 
 }

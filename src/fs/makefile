@@ -24,18 +24,13 @@
 export CPATH := $(shell find ../ -type d | tr '\n' ':')
 BIN := ../../bin
 
-all: lib
+all: fs.img sh.bin
 
-lib: arch.o math.o string.o syscall.o
+fs.img: fat16.asm
+	nasm $^ -f bin -o $@
+	mv $@ $(BIN)/$@
 
-arch.o: arch/arch.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
-math.o: math/math.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
-string.o: string/string.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
-syscall.o: syscall/syscall.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
+sh.bin: sh/main.c
+	gcc $(CF) $^ $(LF) -o sh.o
+	ld -melf_i386 sh.o $(BIN)/syscall.o -Tbin.ld -o $(BIN)/$@
+	rm *.o

@@ -21,22 +21,27 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-BIN="$(PWD)/bin"
+export KERNEL_SEGMENT=0x7E0
+export CF = -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -m16
+export LF = -c -ffreestanding -Os
 
-all: PSOS.bin clean
+all: PSOS clean
 
 lib:
 	make -C src/lib
 
-PSOS.bin: kernel.bin loader.bin
-	cat bin/loader.bin bin/kernel.bin bin/test.txt > bin/$@
+PSOS: loader kernel fs
+	cat bin/loader.bin bin/kernel.bin bin/fs.img > bin/$@.bin
 
-loader.bin: kernel.bin lib
+loader: kernel
 	make -C src/loader
 
-kernel.bin: lib
+kernel: lib
 	make -C src/kernel
+
+fs: lib
+	make -C src/fs
 
 .PHONY: clean
 clean:
-	rm bin/*.o bin/loader.bin bin/kernel.bin
+	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img

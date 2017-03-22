@@ -1,7 +1,7 @@
 #PSOS Development Build
 #https://github.com/TheBenPerson/PSOS/tree/dev
 
-#Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+#Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,10 @@
 #SOFTWARE.
 
 BIN := ../../bin
-KERNEL_SIZE := $(shell du -B 512 --apparent-size $(BIN)/kernel.bin | awk '{print $$1;}')
-CFLAGS := -I.. -I/usr/include -I/usr/include/unistring -DKERNEL_SIZE=$(KERNEL_SIZE) -ansi
-LFLAGS := -c -Mc
+KERNEL_SIZE=$(shell du -B 512 --apparent-size $(BIN)/kernel.bin | awk '{print $$1;}')
 
 all: loader.bin
 
-loader.bin: loaderStub.o storage.o vga.o
-	bcc $(CFLAGS) loader.c $(LFLAGS)
-	ld86 -d $^ loader.o $(BIN)/math.o -o loader.bin
-	objcopy -I binary loader.bin -Bi386 -O elf32-i386 loader.o
-	ld -melf_i386 -Tloader.ld -o loader.bin
-	rm *.o
-	mv loader.bin $(BIN)/loader.bin
-
-loaderStub.o:
-	nasm loaderStub.asm -f as86
-
-storage.o:
-	bcc $(CFLAGS) drv/storage/storage.c $(LFLAGS) -o $@
-
-vga.o:
-	bcc $(CFLAGS) drv/vga/vga.c $(LFLAGS) -o $@
+loader.bin: loader.asm
+	nasm -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DKERNEL_SIZE=$(KERNEL_SIZE) $^ -f bin -o $@
+	mv $@ $(BIN)/$@

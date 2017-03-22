@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -62,10 +62,9 @@ extern byte charY;
 
 extern void clearText();
 extern void initVGA();
-extern void printString(char* string);
+extern void putn(int num, bool hex);
+extern void puts(mem16_t string);
 extern void scroll();
-extern void setCharAttr(byte attr);
-extern void setCharPos(byte X, byte Y);
 extern void setCursor(bool enabled);
 extern void setVGAMode(byte mode);
 

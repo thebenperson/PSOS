@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,9 +29,44 @@ SOFTWARE.
 #include "kernel.h"
 #include "keyboard.h"
 
-void (*keyCallback)(byte) = 0;
-bool keyState[87];
-char keyMap[] = {0x0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x0, 0x0, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0x0, 0x0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0x0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0x0, '*', 0x0, ' ', 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, '7', '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.', 0x0, 0x0, 0x0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x0, 0x0, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0x0, 0x0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0x0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,};
+void (*keyCallback)(byte) = NULL;
+volatile bool keyState[87];
+char keyMap[] = {
+
+	NULL,
+	'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', NULL,
+	NULL, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', NULL, NULL,
+	'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', NULL, '\\',
+	'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', NULL,
+
+	'*', NULL, ' ', NULL,
+
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+
+	NULL, NULL,
+	'7', '8', '9', '-',
+	'4', '5', '6', '+',
+	'1', '2', '3', '0', '.',
+
+	NULL, NULL,
+
+	NULL, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', NULL,
+	NULL, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', NULL, NULL,
+	'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', NULL, '|',
+	'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', NULL,
+
+	NULL, NULL, NULL, NULL,
+
+	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+
+	NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL,
+	NULL, NULL, NULL, NULL, NULL,
+
+	NULL, NULL
+
+};
 
 extern void keyboardISR();
 
@@ -44,18 +79,11 @@ void initKeyboard() {
 void keyboardHandler() {
 
 	byte scanCode;
-	bool value; //why K&R? WHY?!?!
-
-	#asm
-
-		in al, #0x60
-		mov [bp - 1], al
-
-	#endasm
+	asm("in %0, 0x60" : "=a" (scanCode));
 
 	if (scanCode > 0xD8) return;
 
-	value = !(scanCode & 0x80);
+	bool value = !(scanCode & 0x80);
 
 	scanCode <<= 1;
 	scanCode >>= 1;
@@ -66,10 +94,9 @@ void keyboardHandler() {
 
 }
 
-char scToChar(byte scanCode) {
+char toChar(byte scanCode) {
 
 	if (keyState[VK_LSHIFT] || keyState[VK_RSHIFT]) scanCode += 85;
-
 	return keyMap[scanCode];
 
 }

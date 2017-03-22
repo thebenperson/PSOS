@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,15 +28,18 @@ SOFTWARE.
 #ifndef HG_Types_H
 
 #include <stdbool.h>
-//#include <stdint.h>
+#include <stdint.h>
 
-//typedef uint8_t byte;
-//typedef uint16_t word;
-//typedef uint32_t dword;
+#define BRKPT() asm("int3");
+#define HANG() asm("cli"); asm("hlt");
+#define NULL 0
 
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned int dword;
+typedef uint8_t byte;
+typedef uint16_t word;
+typedef uint32_t dword;
+
+typedef uint16_t mem16_t;
+typedef uint16_t size_t;
 
 #define HG_Types_H
 #endif

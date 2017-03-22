@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,57 +25,24 @@ SOFTWARE.
 
 */
 
-#include "keyboard/keyboard.h"
-#include "vga/vga.h"
+#include "arch.h"
+#include "types.h"
 
-void main() {
+void getRegs(mem16_t regs) {
 
-	keyCallback = &keyHandler;
-	while (!(keyState[VK_LALT] && keyState[VK_C])) asm("hlt");
+	asm("mov %0, ax" : "=r" (((struct regs*) regs)->ax));
+	asm("mov %0, bx" : "=r" (((struct regs*) regs)->bx));
+	asm("mov %0, cx" : "=r" (((struct regs*) regs)->cx));
+	asm("mov %0, dx" : "=r" (((struct regs*) regs)->dx));
 
-}
+	asm("mov %0, bp" : "=r" (((struct regs*) regs)->bp));
+	asm("mov %0, sp" : "=r" (((struct regs*) regs)->sp));
 
-void keyHandler(byte scanCode) {
-
-	switch (scanCode) {
-
-		case VK_BACKSPACE:
-
-			charX -= 2;
-			printChar(" ");
-
-		break;
-
-		case VK_LEFT:
-
-			if (charX - 2) charX--;
-
-		break;
-
-		case VK_RIGHT:
-
-			charX++;
-
-		break;
-
-		case VK_RETURN:
-
-			if (charY + 1 == 25) scroll();
-			else charY++;
-
-			charX = 0;
-
-			printString(">>");
-
-		break;
-
-		default: {
-
-			char c = scToChar(scanCode);
-			if (c) printChar(c);
-
-		} break;
-
-	}
+	asm("mov %0, es" : "=r" (((struct regs*) regs)->es));
+	asm("mov %0, cs" : "=r" (((struct regs*) regs)->cs));
+	asm("mov %0, ss" : "=r" (((struct regs*) regs)->ss));
+	asm("mov %0, ds" : "=r" (((struct regs*) regs)->ds));
+	asm("mov %0, fs" : "=r" (((struct regs*) regs)->fs));
+	asm("mov %0, gs" : "=r" (((struct regs*) regs)->gs));
 
 }

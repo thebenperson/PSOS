@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,46 +25,21 @@ SOFTWARE.
 
 */
 
-#include "drv/storage/storage.h"
-#include "drv/vga/vga.h"
+#ifndef HG_LIB_SYSCALL_H
+
 #include "types.h"
-#include "kernel/kernel.h"
 
-char bootError[] = "Error loading kernel.\n"
-"Please power off and remove boot medium.\n\n"
-"   |\\      _,,,--,,_\n"
-"  /,`.-'`'   ._  \\-;;,_\n"
-" |,4-  ) )_   .;.(  `'-'\n"
-"'---''(_/._)-'(_\\_)\n"
-"2 tired 2 werk. come bak latr.";
+#define KERNEL 0
+#define exec 0
 
-void loaderMain() {
+#define VGA 1 << 4
+#define CLEAR_TEXT 0
+#define PUTS 1
 
-	bool result = loadSector(2, KERNEL_SIZE, KERNEL_SEGMENT, 0);
+#define clearText() syscall(VGA | CLEAR_TEXT)
+#define puts(s) syscall(VGA | PUTS, s)
 
-	if (result) {
+extern void syscall(byte call, ...);
 
-		#asm
-
-			mov ax, #KERNEL_SEGMENT
-			mov ds, ax
-
-			mov sp, #0xFFFF
-
-			jmp KERNEL_SEGMENT:0
-
-		#endasm
-
-	}
-
-	initVGA();
-	printString(bootError);
-
-	#asm
-
-		cli
-		hlt
-
-	#endasm
-
-}
+#define HG_LIB_SYSCALL_H
+#endif

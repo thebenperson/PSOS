@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,38 +25,20 @@ SOFTWARE.
 
 */
 
+#include "math.h"
 #include "types.h"
 #include "vga.h"
 
-byte charAttr = FG_WHITE;
+byte charAttr = BG_GREEN;
 word vidOffset = 0;
 
 void clearText() {
 
-	word i; //stupid K&R syntax
+	asm volatile("mov es, %0" :: "a" (0xB800));
 
-	#asm
+	for (word i = 0; i < (80 * 25 * 2); i += 2) {
 
-		mov ax, #0xB800
-		mov es, ax
-
-	#endasm
-
-	for (i = 0; i < (80 * 25 * 2); i += 2) {
-
-		#asm
-
-			mov bx, [bp - 2]
-
-			seg es
-			mov [bx], #0
-
-			mov al, [_charAttr]
-
-			seg es
-			mov [bx + 1], al
-
-		#endasm
+		asm volatile("movw es:[%0], %1" :: "b" (i), "a" ((word) charAttr << 8));
 
 	}
 
@@ -67,67 +49,102 @@ void clearText() {
 void initVGA() {
 
 	setVGAMode(3);
+	clearText();
 	setCursor(false);
 
 }
 
-void moveCursor(byte row, byte column) {
+void putc(char c) {
 
-	//asm("xor bh, bh");
-	//asm("int 0x10" :: "a" (0x2 << 8), "d" ((column << 8) | row));
+	asm("mov es, %0" :: "a" (0xB800));
 
-}
+	if (vidOffset >= (80 * 25 * 2)) {
 
-void printChar(char character) {
-
-	//asm("mov es, %0" :: "a" (0xB800));
-	//asm("movb es:[%0], %1" :: "b" ((charY * 160) + (charX * 2)), "a" (character));
-	//asm("movb es:[bx + 1], %0" :: "a" (charAttr));
-
-	/*if (++charX == 80) {
-
-		charY++;
-		charX = 0;
+		scroll();
+		vidOffset = (80 * 24 * 2);
 
 	}
 
-	moveCursor(charX, charY);*/
+	if (c == '\n') {
+
+		vidOffset += 160 - (vidOffset % 160);
+
+	} else {
+
+		asm("mov es:[%0], %1" :: "b" (vidOffset), "a" (c));
+		asm("mov es:[bx + 1], %0" :: "a" (charAttr));
+
+		vidOffset += 2;
+
+	}
 
 }
 
-void printString(char* string) {
+void putn(int num, bool hex) {
 
-	#asm
+	if (hex) puts("0x");
 
-		mov ax, #0xB800
-		mov es, ax
+	byte base = hex ? 16 : 10;
+	byte nCarry = 0;
+	byte place = 0;
 
-	#endasm
+	while (num) {
 
-	while (*string != '\0') {
+		bool carry;
+		place = 0;
+		int rem = num;
 
-		if (*string == '\n') {
+		while (rem >= base) {
+
+			carry = !(rem % base);
+
+			if (carry) nCarry++;
+			else nCarry = 0;
+
+			rem /= base;
+			place++;
+
+		}
+
+		if ((hex) && (rem >= 10)) putc(rem + 0x37);
+		else putc(rem + 0x30);
+
+		if (carry) {
+
+			for (byte i = 0; i < nCarry; i++)
+				putc('0');
+
+			nCarry = 0;
+
+		} else nCarry++;
+
+		num -= (rem * pow(10, place));
+
+	}
+
+}
+
+void puts(mem16_t string) {
+
+	asm("mov es, %0" :: "a" (0xB800));
+
+	while (*((char*) string)) {
+
+		if (vidOffset >= (80 * 25 * 2)) {
+
+			scroll();
+			vidOffset = (80 * 24 * 2);
+
+		}
+
+		if (*((char*) string) == '\n') {
 
 			vidOffset += 160 - (vidOffset % 160);
 
 		} else {
 
-			#asm
-
-				mov bx, [bp + 4]
-				mov al, [bx] //get next character
-
-				mov bx, [_vidOffset]
-
-				seg es
-				mov [bx], al
-
-				mov al, [_charAttr]
-
-				seg es
-				mov [bx + 1], al
-
-			#endasm
+			asm("mov es:[%0], %1" :: "b" (vidOffset), "a" (*((char* ) string)));
+			asm("mov es:[bx + 1], %0" :: "a" (charAttr));
 
 			vidOffset += 2;
 
@@ -139,74 +156,30 @@ void printString(char* string) {
 
 }
 
-/*void scroll() {
+void scroll() {
 
-	char far* vram = (char far*) 0xB8000000;
+	asm("mov es, %0" :: "a" (0xB800));
 
-	for (word i = 0; i < (80 * 25 * 2); i += 2) {
+	for (size_t i = 0; i < (80 * 24 * 2); i += 2) {
 
-		//asm("movw ax, es:[%0 + 160]" :: "b" (i));
-		//asm("movw es:[bx], ax");
+		asm("movw ax, es:[%0 + 160]" :: "b" (i));
+		asm("movw es:[bx], ax");
 
 	}
 
-}
-
-void setCharAttr(byte attr) {
-
-	charAttr = attr;
+	for (size_t i = (80 * 24 * 2); i < (80 * 25 * 2); i += 2)
+		asm("mov es:[%0], %1" :: "b" (i), "a" (charAttr << 8));
 
 }
-
-void setCharPos(byte x, byte y) {
-
-	charX = x;
-	charY = y;
-
-}*/
 
 void setCursor(bool enabled) {
 
-	if (enabled) {
-
-		#asm
-
-			mov cx, #0x7
-
-		#endasm
-
-	} else {
-
-		#asm
-
-			mov cx, #0x700
-
-		#endasm
-
-	}
-
-	#asm
-
-		mov ah, #0x1
-		int 0x10
-
-	#endasm
+	asm("int 0x10" :: "a" (1 << 8), "c" (enabled ? 0x7 : 0x700));
 
 }
 
 void setVGAMode(byte mode) {
 
-	#asm
-
-		push bp
-		mov bp, sp
-
-		xor ah, ah
-		mov al, [bp + 4]
-		int 0x10
-
-		pop bp
-
-	#endasm
+	asm("int 0x10" :: "a" (mode));
 
 }

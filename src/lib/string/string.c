@@ -3,7 +3,7 @@
 PSOS Development Build
 https://github.com/TheBenPerson/PSOS/tree/dev
 
-Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,27 +25,28 @@ SOFTWARE.
 
 */
 
+#include "string.h"
 #include "types.h"
 
-bool strcmp(char* str1, char* str2) {
+bool strcmp(mem16_t str1, mem16_t str2) {
 
-	byte strLen = strlen(str1);
+	byte len = strlen(str1);
 
-	if (strLen != strlen(str2)) return false;
+	if (len != strlen(str2)) return false;
 
-	for (byte i = 0; i < strLen; i++)
+	for (byte i = 0; i < len; i++)
 		if (((char*) str1)[i] != ((char*) str2)[i]) return false;
 
 	return true;
 
 }
 
-byte strlen(char* string) {
+byte strlen(mem16_t string) {
 
-	byte strlen = 0;
+	byte len = 0;
 
-	while (((char*) string)[strlen++] != '\0') {}
+	while (((char*) string)[len++]) {}
 
-	return strlen;
+	return len;
 
 }

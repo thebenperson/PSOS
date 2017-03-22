@@ -1,7 +1,7 @@
 ;PSOS Development Build
 ;https://github.com/TheBenPerson/PSOS/tree/dev
 
-;Copyright (C) 2016 Ben Stockett <thebenstockett@gmail.com>
+;Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
 ;Permission is hereby granted, free of charge, to any person obtaining a copy
 ;of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,31 @@
 
 [BITS 16]
 
-section .text
+extern brkpt
+global brkptISR
 
-global _main
-_main:
+brkptISR: ;int3 handler
 
-jmp 0x7C0:start ;set code segment to 0x7C0
+	call dword brkpt
 
-start:
+iret
 
-mov ax, cs
-mov ds, ax ;set up data segment
+extern syscall
+extern sysret
+global syscallISR
 
-mov ax, 0x50
-mov ss, ax
-mov sp, 0xFFFF ;set up initial stack space
+syscallISR: ;syscall handler
 
-%include "drv/storage/init.asm" ;save drive number
+	pop dword [sysret]
+	pop dword [sysret + 4]
+	pop dword [sysret + 8]
+	pop word [sysret + 12]
 
-extern _loaderMain
-jmp _loaderMain
+	call dword syscall
+
+	push word [sysret + 12]
+	push dword [sysret + 8]
+	push dword [sysret + 4]
+	push dword [sysret]
+
+iret

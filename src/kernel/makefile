@@ -27,7 +27,7 @@ BIN := ../../bin
 
 all: kernel.bin
 
-kernel.bin: keyboard.o pit.o storage.o vga.o
+kernel.bin: kbd.o pit.o storage.o vga.o
 	gcc $(CF) kernel.c $(LF) -o kernelc.o
 	nasm -f elf stubs.asm
 	ld kernelc.o stubs.o $(BIN)/arch.o $(BIN)/math.o $(BIN)/string.o $^ -melf_i386 -r -o kernel.o
@@ -35,10 +35,10 @@ kernel.bin: keyboard.o pit.o storage.o vga.o
 	rm *.o
 	mv kernel.bin $(BIN)/.
 
-keyboard.o:
-	gcc $(CF) drv/keyboard/keyboard.c $(LF) -o keyboardc.o
-	nasm -f elf drv/keyboard/keyboardISR.asm -o keyboardISR.o
-	ld -r keyboardc.o keyboardISR.o -melf_i386 -o $@
+kbd.o:
+	gcc $(CF) drv/kbd/kbd.c $(LF) -o kbdc.o
+	nasm -f elf drv/kbd/kbdISR.asm -o kbdISR.o
+	ld -r kbdc.o kbdISR.o -melf_i386 -o $@
 
 pit.o:
 	gcc $(CF) drv/pit/pit.c $(LF) -o pitc.o

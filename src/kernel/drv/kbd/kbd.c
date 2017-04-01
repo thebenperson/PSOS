@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "types.h"
 #include "kernel.h"
-#include "keyboard.h"
+#include "kbd.h"
 
 void (*keyCallback)(byte) = NULL;
 volatile bool keyState[87];
@@ -68,15 +68,21 @@ char keyMap[] = {
 
 };
 
-extern void keyboardISR();
+extern void kbdISR();
 
-void initKeyboard() {
+bool getKey(byte key) {
 
-	installISR(9, keyboardISR);
+	return keyMap[key];
 
 }
 
-void keyboardHandler() {
+void initKBD() {
+
+	installISR(9, kbdISR);
+
+}
+
+void kbdHandler() {
 
 	byte scanCode;
 	asm("in %0, 0x60" : "=a" (scanCode));

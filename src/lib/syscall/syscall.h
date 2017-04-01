@@ -29,17 +29,15 @@ SOFTWARE.
 
 #include "types.h"
 
-#define KERNEL 0
-#define exec 0
+#define getKey(b) syscall(0, b)
+#define sleep(w) syscall(1, w)
 
-#define VGA 1 << 4
-#define CLEAR_TEXT 0
-#define PUTS 1
+#define clearText() syscall(2)
+#define putc(b) syscall(3, b)
+#define putn(w, b) syscall(4, w, b)
+#define puts(w) syscall(5, w)
 
-#define clearText() syscall(VGA | CLEAR_TEXT)
-#define puts(s) syscall(VGA | PUTS, s)
-
-extern void syscall(byte call, ...);
+extern word syscall(byte call, ...);
 
 #define HG_LIB_SYSCALL_H
 #endif

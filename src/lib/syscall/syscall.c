@@ -28,8 +28,12 @@ SOFTWARE.
 #include "syscall.h"
 #include "types.h"
 
-void syscall(byte call, ...) {
+word syscall(byte call, ...) {
 
-	asm("int 0x20");
+	word retval;
+
+	asm("int 0x20" : "=a" (retval));
+
+	return retval;
 
 }

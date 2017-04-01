@@ -29,12 +29,20 @@ global pitISR
 pitISR:
 
 	cli
+	pushad
+
+	mov ax, cs
+	mov ds, ax
 
 	inc word [time]
 
 	mov al, 0x20
 	out 0x20, al
 
+	mov ax, ss
+	mov ds, ax
+
+	popad
 	sti
 
 iret

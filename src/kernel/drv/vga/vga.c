@@ -25,6 +25,7 @@ SOFTWARE.
 
 */
 
+#include "kernel.h"
 #include "math.h"
 #include "types.h"
 #include "vga.h"
@@ -34,11 +35,11 @@ word vidOffset = 0;
 
 void clearText() {
 
-	asm volatile("mov es, %0" :: "a" (0xB800));
+	asm("mov es, %0" :: "r" (0xB800));
 
 	for (word i = 0; i < (80 * 25 * 2); i += 2) {
 
-		asm volatile("movw es:[%0], %1" :: "b" (i), "a" ((word) charAttr << 8));
+		asm("movw es:[%0], %1" :: "b" (i), "r" ((word) charAttr << 8));
 
 	}
 
@@ -71,8 +72,8 @@ void putc(char c) {
 
 	} else {
 
-		asm("mov es:[%0], %1" :: "b" (vidOffset), "a" (c));
-		asm("mov es:[bx + 1], %0" :: "a" (charAttr));
+		asm("mov es:[%0], %1" :: "b" (vidOffset), "r" (c));
+		asm("mov es:[bx + 1], %0" :: "r" (charAttr));
 
 		vidOffset += 2;
 
@@ -126,9 +127,17 @@ void putn(int num, bool hex) {
 
 void puts(mem16_t string) {
 
-	asm("mov es, %0" :: "a" (0xB800));
+	word tSegment = syscalled ? segment : KERNEL_SEGMENT;
 
-	while (*((char*) string)) {
+	asm("mov es, %0" :: "r" (0xB800));
+
+	for (;;) {
+
+		REMOTE();
+		char c = *((char*) string);
+		LOCAL();
+
+		if (!c) return;
 
 		if (vidOffset >= (80 * 25 * 2)) {
 
@@ -137,14 +146,14 @@ void puts(mem16_t string) {
 
 		}
 
-		if (*((char*) string) == '\n') {
+		if (c == '\n') {
 
 			vidOffset += 160 - (vidOffset % 160);
 
 		} else {
 
-			asm("mov es:[%0], %1" :: "b" (vidOffset), "a" (*((char* ) string)));
-			asm("mov es:[bx + 1], %0" :: "a" (charAttr));
+			asm("mov es:[%0], %1" :: "b" (vidOffset), "r" (c));
+			asm("mov es:[bx + 1], %0" :: "r" (charAttr));
 
 			vidOffset += 2;
 
@@ -158,7 +167,7 @@ void puts(mem16_t string) {
 
 void scroll() {
 
-	asm("mov es, %0" :: "a" (0xB800));
+	asm("mov es, %0" :: "r" (0xB800));
 
 	for (size_t i = 0; i < (80 * 24 * 2); i += 2) {
 

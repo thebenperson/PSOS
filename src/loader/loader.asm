@@ -35,8 +35,8 @@ dw 256 ;directory entries
 dw 1 + KERNEL_SIZE + 3 + ((256 * 32) / 512) + ((128 * 1024) / 512) ;sectors
 db 0xF0 ;media descriptor byte
 dw 3 ;sectors per FAT
-dw 16 ;sectors per track
-dw 2 ;heads
+dw 0 ;sectors per track
+dw 0 ;heads
 dd 0 ;hidden sectors
 dd 0 ;sectors (large)
 db 0 ;drive number

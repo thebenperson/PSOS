@@ -29,7 +29,12 @@ SOFTWARE.
 
 #include "types.h"
 
+#define REMOTE() asm("mov ds, %0" :: "a" (tSegment));
+#define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
+
 extern byte kernelSize;
+extern word segment;
+extern bool syscalled;
 
 extern void installISR(word inturrupt, mem16_t handler);
 

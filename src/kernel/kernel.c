@@ -26,7 +26,7 @@ SOFTWARE.
 */
 
 #include "arch.h"
-#include "keyboard.h"
+#include "kbd.h"
 #include "pit.h"
 #include "storage.h"
 #include "vga.h"
@@ -35,17 +35,16 @@ SOFTWARE.
 #include "types.h"
 
 byte kernelSize;
-byte sysret[14];
+bool syscalled = false;
+word segment;
 char versionString[] =
 "PSOS (Pretty Simple/Stupid Operating System) Development Build\n"
 "Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>\n";
 
 bool exec(mem16_t path);
-void getRegs(mem16_t regs);
 void initKernel();
 void installISR(word num, mem16_t handler);
 void panic(mem16_t reason);
-void syscall(byte call, ...);
 
 extern void brkptISR();
 extern void syscallISR();
@@ -98,25 +97,28 @@ bool exec(mem16_t path) {
 	bool result = openFile(path, &file);
 	if (!result) return false;
 
-	word segment = KERNEL_SEGMENT + (((1 + kernelSize) * 512) / 16);
+	segment = KERNEL_SEGMENT + (((1 + kernelSize) * 512) / 16);
 	result = loadFile(&file, segment, 0);
 
 	asm("mov ds, %0" :: "a" (segment));
 	asm("mov ss, ax");
 
-	asm("call 0x8E0:0");
+	asm("push ax");
+	asm("push 0");
+
+	asm("retf");
 
 }
 
 void initKernel() {
 
-	asm("mov es, %0" :: "a" (0x7C0));
+	asm("mov es, %0" :: "r" (0x7C0));
 	asm("mov %0, es:[0x1FD]" : "=r" (kernelSize)); //get kernel size
 
 	installISR(3, brkptISR); //install breakpoint handler
 	installISR(0x20, syscallISR); //install syscall handler
 
-	initKeyboard();
+	initKBD();
 	initPIT();
 	initStorage();
 	initVGA();
@@ -125,12 +127,9 @@ void initKernel() {
 
 void installISR(word num, mem16_t handler) {
 
-	num *= 4;
+	asm("mov es, %0" :: "r" (0));
 
-	asm("xor ax, ax");
-	asm("mov es, ax");
-
-	asm("mov es:[%0], %1" :: "b" (num), "a" (handler));
+	asm("mov es:[%0], %1" :: "b" (num * 4), "r" (handler));
 	asm("movw es:[bx + 2], %0" :: "i" (KERNEL_SEGMENT));
 
 }
@@ -144,55 +143,5 @@ __attribute__((noreturn)) void panic(mem16_t reason) {
 	puts(reason);
 
 	HANG();
-
-}
-
-void syscall(byte call, ...) {
-
-	word segment;
-	asm("mov %0, ds" : "=r" (segment));
-
-	asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
-
-	byte subcall = call & 0xF;
-
-	switch (call >> 4) {
-
-		case 0:
-
-			switch (subcall) {
-
-				case 0:
-
-
-				break;
-
-			}
-
-		break;
-
-		case 1:
-
-			switch (subcall) {
-
-				case 0:
-
-					asm("call clearText");
-
-				break;
-
-				case 1:
-
-					asm("call puts");
-
-				break;
-
-			}
-
-		break;
-
-	}
-
-	asm("mov ds, %0" :: "a" (segment));
 
 }

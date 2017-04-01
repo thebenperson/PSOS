@@ -25,12 +25,20 @@ SOFTWARE.
 
 */
 
+#include "kbd.h"
 #include "syscall.h"
 #include "types.h"
 
-void main() {
+__attribute__((noreturn, section(".main"))) void main() {
 
-	puts((mem16_t) "Hello, World!!");
+	puts((mem16_t) "Hello from userland (sort-of)!!");
+
+	/*for (;;) {
+
+		if (syscall(0, VK_RETURN)) puts((mem16_t) "Return Pressed");
+		else asm("hlt");
+
+	}*/
 
 	HANG();
 

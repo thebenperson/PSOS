@@ -23,18 +23,28 @@
 
 [BITS 16]
 
-extern keyboardHandler
-global keyboardISR
+SECTION .text
 
-keyboardISR:
+extern kbdHandler
+global kbdISR
+
+kbdISR:
 
 	cli
+	pushad
 
-	call dword keyboardHandler
+	mov ax, cs
+	mov ds, ax
+
+	call dword kbdHandler
 
 	mov al, 0x20
 	out 0x20, al
 
+	mov ax, ss
+	mov ds, ax
+
+	popad
 	sti
 
 iret

@@ -23,31 +23,114 @@
 
 [BITS 16]
 
+SECTION .text
+
 extern brkpt
 global brkptISR
 
 brkptISR: ;int3 handler
 
+	sti
+	pushad
+
+	mov ax, cs
+	mov ds, ax
+
 	call dword brkpt
+
+	mov ax, ss
+	mov ds, ax
+
+	popad
 
 iret
 
-extern syscall
-extern sysret
+extern segment
+extern syscalled
 global syscallISR
 
 syscallISR: ;syscall handler
 
-	pop dword [sysret]
-	pop dword [sysret + 4]
-	pop dword [sysret + 8]
-	pop word [sysret + 12]
+	sti ;enable interrupts
 
-	call dword syscall
+	pushad ;save registers
+	pop dword [regs]
+	pop dword [regs + 4]
+	pop dword [regs + 8]
+	pop dword [regs + 12]
+	pop dword [regs + 16]
+	pop dword [regs + 20]
+	pop dword [regs + 24]
+	pop dword [regs + 28]
 
-	push word [sysret + 12]
-	push dword [sysret + 8]
-	push dword [sysret + 4]
-	push dword [sysret]
+	mov ax, cs
+	mov ds, ax ;ds = KERNEL_SEGMENT
+
+	mov byte [syscalled], 1 ;syscalled = 1
+
+	pop dword [retinfo]
+	pop dword [retinfo + 4]
+	pop dword [retinfo + 8]
+	pop word [retinfo + 12] ;now arguments are at the top of the stack
+
+	pop ebx
+	shl ebx, 2 ;call *= 4
+
+	call dword [callTable + ebx]
+	mov [retval], ax
+
+	push ebx
+
+	push word [retinfo + 12]
+	push dword [retinfo + 8]
+	push dword [retinfo + 4]
+	push dword [retinfo]
+
+	mov ax, [segment]
+	mov ds, ax ;restore segment
+
+	push dword [regs + 28] ;restore registers
+	push dword [regs + 24]
+	push dword [regs + 20]
+	push dword [regs + 16]
+	push dword [regs + 12]
+	push dword [regs + 8]
+	push dword [regs + 4]
+	push dword [regs]
+	popad
+
+	mov ax, [retval]
 
 iret
+
+SECTION .data
+
+callTable:
+
+	;keyboard syscalls
+
+	extern getKey
+
+	dd getKey
+
+	;pit syscalls
+
+	extern sleep
+
+	dd sleep
+
+	;vga syscalls
+
+	extern clearText
+	extern putc
+	extern putn
+	extern puts
+
+	dd clearText
+	dd putc
+	dd putn
+	dd puts
+
+regs: times 32 db 0
+retinfo: times 14 db 0
+retval: dw 0

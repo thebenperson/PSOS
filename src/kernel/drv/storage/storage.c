@@ -35,25 +35,25 @@ SOFTWARE.
 #define FAT_SIZE 3
 #define ROOT_SIZE (ENTRIES * 32) / 512
 
-volatile byte drive;
+byte drive;
 
-volatile byte tracks;
-volatile byte sectors;
-volatile byte heads;
+byte sectors;
+byte heads;
 
 void initStorage() {
 
-	asm("mov es, %0" :: "a" (0x7C0));
+	asm("mov es, %0" :: "r" (0x7C0));
 	asm("mov %0, es:[0x1FE]" : "=r" (drive)); //get drive number from loader
 
 	asm("mov ah, 0x8");
-	asm("int 0x13" :: "d" (drive)); //get emulated drive geometry
+	asm("int 0x13"
+		:
+		: "d" (drive)
+		: "cc", "ah", "cx", "bl", "di"); //get emulated drive geometry
 
-	volatile word cx;
-	asm("mov %0, cx" : "=r" (cx));
-	asm("mov %0, dh" : "=r" (heads));
-
-	tracks = (cx >> 6) + 1;
+	word cx;
+	asm("mov %0, cx" : "=a" (cx));
+	asm("mov %0, dh" : "=g" (heads));
 
 	sectors = (cx << 10) >> 10;
 	heads++;
@@ -64,14 +64,17 @@ bool loadSector(byte start, byte length, word segment, word offset) {
 
 	byte track = start / (heads * sectors);
 	byte head = (start / sectors) % heads;
-	byte sector = (start % sectors) + 1; //LBA to CHS translation
+	byte sector = (start % sectors) + 1; //LBA to CHS conversion
 
 	bool result;
 
-	asm("mov es, %0" :: "a" (segment));
+	asm("mov es, %0" :: "r" (segment));
+	asm("int 0x13"
+		:
+		: "c" ((track << 6) | sector), "a" ((0x2 << 8) | length), "b" (offset), "d" ((head << 8) | drive)
+		: "cc");
 
-	asm("int 0x13" :: "c" ((track << 6) | sector), "a" ((0x2 << 8) | length), "b" (offset), "d" ((head << 8) | drive));
-	asm("setc %0" : "=r" (result));
+	asm("setc %0" : "=g" (result));
 
 	return !result;
 

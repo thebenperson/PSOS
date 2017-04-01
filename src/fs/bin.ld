@@ -38,6 +38,7 @@ SECTIONS {
 
 	.bin : {
 
+		*.o(.main)
 		*.o
 		. = ALIGN(512);
 

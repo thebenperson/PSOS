@@ -46,7 +46,7 @@ void initPIT() {
 
 }
 
-void sleep(size_t mili) {
+void ksleep(size_t mili) {
 
 	size_t lastTime = time;
 

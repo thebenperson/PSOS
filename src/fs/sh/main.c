@@ -29,17 +29,39 @@ SOFTWARE.
 #include "syscall.h"
 #include "types.h"
 
-__attribute__((noreturn, section(".main"))) void main() {
+void keyHandler(byte scanCode);
 
-	puts((mem16_t) "Hello from userland (sort-of)!!");
+UENTRY void main() {
 
-	/*for (;;) {
+	setCursor(true);
+	puts("sh>");
+	setCallback(keyHandler);
 
-		if (syscall(0, VK_RETURN)) puts((mem16_t) "Return Pressed");
-		else asm("hlt");
+	while (!getKey(VK_ESC)) {
 
-	}*/
+		sleep(100);
 
+	}
+
+	puts("\nGoodbye.");
 	HANG();
+
+}
+
+__attribute__((noreturn)) void keyHandler(byte scanCode) {
+
+	asm("mov eax, 0xDEADBEEF");
+	HANG();
+
+	switch (scanCode) {
+
+		case VK_RETURN: puts("\nsh>");
+		break;
+
+		default: putc(toChar(scanCode));
+
+	}
+
+	asm("retf");
 
 }

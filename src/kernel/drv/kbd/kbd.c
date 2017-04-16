@@ -29,7 +29,7 @@ SOFTWARE.
 #include "kernel.h"
 #include "kbd.h"
 
-void (*keyCallback)(byte) = NULL;
+mem16_t keyCallback = NULL;
 volatile bool keyState[87];
 char keyMap[] = {
 
@@ -70,12 +70,6 @@ char keyMap[] = {
 
 extern void kbdISR();
 
-bool getKey(byte key) {
-
-	return keyMap[key];
-
-}
-
 void initKBD() {
 
 	installISR(9, kbdISR);
@@ -96,11 +90,35 @@ void kbdHandler() {
 
 	keyState[--scanCode] = value;
 
-	if (value && keyCallback) keyCallback(scanCode);
+	if (value && keyCallback) {
+
+		asm("push %0" :: "g" ((dword) scanCode));
+
+		asm("push %0" :: "a" ((dword) segment));
+		asm("push %0" :: "b" ((dword) keyCallback));
+
+		asm("mov ds, ax");
+		asm("mov ss, ax");
+
+		asm("retf");
+
+	}
 
 }
 
-char toChar(byte scanCode) {
+bool kgetKey(byte key) {
+
+	return keyState[key];
+
+}
+
+void ksetCallback(mem16_t callback) {
+
+	keyCallback = callback;
+
+}
+
+char ktoChar(byte scanCode) {
 
 	if (keyState[VK_LSHIFT] || keyState[VK_RSHIFT]) scanCode += 85;
 	return keyMap[scanCode];

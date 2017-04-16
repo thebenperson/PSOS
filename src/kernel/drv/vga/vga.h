@@ -60,13 +60,13 @@ extern byte charAttr;
 extern byte charX;
 extern byte charY;
 
-extern void clearText();
+extern void kclearText();
 extern void initVGA();
-extern void putn(int num, bool hex);
-extern void puts(mem16_t string);
-extern void scroll();
-extern void setCursor(bool enabled);
-extern void setVGAMode(byte mode);
+extern void kputn(int num, bool hex);
+extern void kputs(mem16_t string);
+extern void ksetCursor(bool enabled);
+extern void ksetPosition(word position);
+extern void ksetVGAMode(byte mode);
 
 #define HG_Kernel_VGA_H
 #endif

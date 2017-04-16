@@ -28,7 +28,7 @@ SOFTWARE.
 #ifndef HG_Kernel_PIT_H
 
 extern void initPIT();
-extern void sleep(size_t mili);
+extern void ksleep(size_t mili);
 
 #define HG_Kernel_PIT_H
 #endif

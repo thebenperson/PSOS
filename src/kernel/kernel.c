@@ -41,44 +41,45 @@ char versionString[] =
 "PSOS (Pretty Simple/Stupid Operating System) Development Build\n"
 "Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>\n";
 
-bool exec(mem16_t path);
+bool kexec(mem16_t path);
 void initKernel();
 void installISR(word num, mem16_t handler);
 void panic(mem16_t reason);
 
-extern void brkptISR();
 extern void syscallISR();
 
-__attribute__((noreturn, section(".kmain"))) void kmain() {
+KENTRY void kmain() {
 
 	initKernel();
-	puts("Loaded kernel.\n\n");
-	puts(versionString);
-	puts("\nReady...\n\n");
+	kputs("Loaded kernel.\n\n");
+	kputs(versionString);
+	kputs("\nReady...\n\n");
 
-	if (!exec("SH.BIN")) panic("Could not locate SH.BIN");
+	if (!kexec("SH.BIN")) panic("Could not locate SH.BIN");
 
-	puts("System ready for shutdown\nPlease power off and remove boot medium");
+	kputs("System ready for shutdown\nPlease power off and remove boot medium");
 
 	HANG();
 
 }
 
-void brkpt() {
+void kbrkpt() {
+
+	syscalled = false;
 
 	byte old = charAttr;
 
 	charAttr = BG_WHITE | FG_YELLOW;
-	clearText();
+	kclearText();
 
-	puts("Breakpoint: press return to continue\n");
+	kputs("Breakpoint: press return to continue\n");
 
 	struct regs regs;
 	getRegs(&regs);
 
-	puts("\nFree mem: ");
-	putn((regs.sp - (kernelSize * 512)) / 1024, false);
-	puts("KiB");
+	kputs("\nFree mem: ");
+	kputn((regs.sp - (kernelSize * 512)) / 1024, false);
+	kputs("KiB");
 
 	while (!keyState[VK_RETURN])
 		asm ("hlt");
@@ -86,11 +87,11 @@ void brkpt() {
 	keyState[VK_RETURN] = false;
 
 	charAttr = old;
-	clearText();
+	kclearText();
 
 }
 
-bool exec(mem16_t path) {
+bool kexec(mem16_t path) {
 
 	File file;
 
@@ -100,10 +101,13 @@ bool exec(mem16_t path) {
 	segment = KERNEL_SEGMENT + (((1 + kernelSize) * 512) / 16);
 	result = loadFile(&file, segment, 0);
 
+	if (!result) return;
+
+	asm("xor eax, eax");
 	asm("mov ds, %0" :: "a" (segment));
 	asm("mov ss, ax");
 
-	asm("push ax");
+	asm("push eax");
 	asm("push 0");
 
 	asm("retf");
@@ -115,7 +119,6 @@ void initKernel() {
 	asm("mov es, %0" :: "r" (0x7C0));
 	asm("mov %0, es:[0x1FD]" : "=r" (kernelSize)); //get kernel size
 
-	installISR(3, brkptISR); //install breakpoint handler
 	installISR(0x20, syscallISR); //install syscall handler
 
 	initKBD();
@@ -137,10 +140,10 @@ void installISR(word num, mem16_t handler) {
 __attribute__((noreturn)) void panic(mem16_t reason) {
 
 	charAttr = BG_RED;
-	clearText();
+	kclearText();
 
-	puts("KERNEL PANIC: ");
-	puts(reason);
+	kputs("KERNEL PANIC: ");
+	kputs(reason);
 
 	HANG();
 

@@ -120,13 +120,9 @@ SOFTWARE.
 
 #include "types.h"
 
-extern void (*keyCallback)(byte);
-extern char keyMap[174];
 extern volatile bool keyState[87];
 
-extern bool getKey(byte key);
 extern void initKeyboard();
-extern char toChar(byte scanCode);
 
 #define HG_Kernel_Keyboard_H
 #endif

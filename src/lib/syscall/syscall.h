@@ -29,15 +29,21 @@ SOFTWARE.
 
 #include "types.h"
 
-#define getKey(b) syscall(0, b)
-#define sleep(w) syscall(1, w)
+#define brkpt() syscall(0, 0)
 
-#define clearText() syscall(2)
-#define putc(b) syscall(3, b)
-#define putn(w, b) syscall(4, w, b)
-#define puts(w) syscall(5, w)
+#define getKey(b) syscall(1, b)
+#define setCallback(w) syscall(2, w)
+#define toChar(b) syscall(3, b)
 
-extern word syscall(byte call, ...);
+#define sleep(w) syscall(4, w)
+
+#define clearText() syscall(5, 0)
+#define putc(b) syscall(6, b)
+//putn is mising
+#define puts(w) syscall(8, w)
+#define setCursor(b) syscall(9, b)
+
+extern word syscall(byte call, word arg);
 
 #define HG_LIB_SYSCALL_H
 #endif

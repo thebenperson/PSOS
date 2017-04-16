@@ -30,9 +30,10 @@ SOFTWARE.
 #include <stdbool.h>
 #include <stdint.h>
 
-#define BRKPT() asm("int3");
 #define HANG() asm("cli"); asm("hlt");
+#define KENTRY __attribute__((noreturn, section(".kmain")))
 #define NULL 0
+#define UENTRY __attribute__((noreturn, section(".main")))
 
 typedef uint8_t byte;
 typedef uint16_t word;

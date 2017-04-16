@@ -33,13 +33,15 @@ SOFTWARE.
 byte charAttr = BG_GREEN;
 word vidOffset = 0;
 
-void clearText() {
+void scroll();
+
+void kclearText() {
 
 	asm("mov es, %0" :: "r" (0xB800));
 
 	for (word i = 0; i < (80 * 25 * 2); i += 2) {
 
-		asm("movw es:[%0], %1" :: "b" (i), "r" ((word) charAttr << 8));
+		asm("movw es:[%0], %1" :: "b" (i), "g" (charAttr << 8));
 
 	}
 
@@ -49,13 +51,13 @@ void clearText() {
 
 void initVGA() {
 
-	setVGAMode(3);
-	clearText();
-	setCursor(false);
+	ksetVGAMode(3);
+	kclearText();
+	ksetCursor(false);
 
 }
 
-void putc(char c) {
+void kputc(char c) {
 
 	asm("mov es, %0" :: "a" (0xB800));
 
@@ -81,9 +83,9 @@ void putc(char c) {
 
 }
 
-void putn(int num, bool hex) {
+void kputn(int num, bool hex) {
 
-	if (hex) puts("0x");
+	if (hex) kputs("0x");
 
 	byte base = hex ? 16 : 10;
 	byte nCarry = 0;
@@ -107,13 +109,13 @@ void putn(int num, bool hex) {
 
 		}
 
-		if ((hex) && (rem >= 10)) putc(rem + 0x37);
-		else putc(rem + 0x30);
+		if ((hex) && (rem >= 10)) kputc(rem + 0x37);
+		else kputc(rem + 0x30);
 
 		if (carry) {
 
 			for (byte i = 0; i < nCarry; i++)
-				putc('0');
+				kputc('0');
 
 			nCarry = 0;
 
@@ -125,7 +127,7 @@ void putn(int num, bool hex) {
 
 }
 
-void puts(mem16_t string) {
+void kputs(mem16_t string) {
 
 	word tSegment = syscalled ? segment : KERNEL_SEGMENT;
 
@@ -137,7 +139,12 @@ void puts(mem16_t string) {
 		char c = *((char*) string);
 		LOCAL();
 
-		if (!c) return;
+		if (!c) {
+
+			ksetPosition(vidOffset);
+			return;
+
+		}
 
 		if (vidOffset >= (80 * 25 * 2)) {
 
@@ -165,6 +172,34 @@ void puts(mem16_t string) {
 
 }
 
+void ksetCursor(bool enabled) {
+
+	asm("int 0x10" :: "a" (1 << 8), "c" (enabled ? 0x7 : 0x700));
+
+}
+
+void ksetPosition(word position) {
+
+	vidOffset = position;
+
+	word port;
+
+	asm("mov es, %0" :: "a" (0));
+	asm("mov %0, es:[0x463]" : "=g" (port));
+
+	asm("out %0, %1" :: "d" ((word) port), "a" ((byte) 0xF));
+	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) position & 0xFF));
+	asm("out %0, %1" :: "d" ((word) port), "a" ((byte) 0xE));
+	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) position >> 8));
+
+}
+
+void ksetVGAMode(byte mode) {
+
+	asm("int 0x10" :: "a" (mode));
+
+}
+
 void scroll() {
 
 	asm("mov es, %0" :: "r" (0xB800));
@@ -178,17 +213,5 @@ void scroll() {
 
 	for (size_t i = (80 * 24 * 2); i < (80 * 25 * 2); i += 2)
 		asm("mov es:[%0], %1" :: "b" (i), "a" (charAttr << 8));
-
-}
-
-void setCursor(bool enabled) {
-
-	asm("int 0x10" :: "a" (1 << 8), "c" (enabled ? 0x7 : 0x700));
-
-}
-
-void setVGAMode(byte mode) {
-
-	asm("int 0x10" :: "a" (mode));
 
 }

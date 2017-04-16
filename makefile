@@ -25,13 +25,19 @@ export KERNEL_SEGMENT=0x7E0
 export CF = -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -m16
 export LF = -c -ffreestanding -Os
 
-all: PSOS clean
+all: PSOS
 
 lib:
 	make -C src/lib
 
 PSOS: loader kernel fs
-	cat bin/loader.bin bin/kernel.bin bin/fs.img > bin/$@.bin
+	cat bin/loader.bin bin/kernel.bin bin/fs.img > bin/$@.img
+	sudo mount bin/PSOS.img mnt
+	sudo mv bin/sh.bin mnt/.
+	sudo umount mnt
+	truncate -s 1200K bin/PSOS.img
+	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img
+	mkisofs -o bin/PSOS.iso -V PSOS-dev -b PSOS.img bin
 
 loader: kernel
 	make -C src/loader
@@ -41,7 +47,3 @@ kernel: lib
 
 fs: lib
 	make -C src/fs
-
-.PHONY: clean
-clean:
-	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img

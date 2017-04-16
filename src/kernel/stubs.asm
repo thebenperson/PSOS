@@ -25,26 +25,6 @@
 
 SECTION .text
 
-extern brkpt
-global brkptISR
-
-brkptISR: ;int3 handler
-
-	sti
-	pushad
-
-	mov ax, cs
-	mov ds, ax
-
-	call dword brkpt
-
-	mov ax, ss
-	mov ds, ax
-
-	popad
-
-iret
-
 extern segment
 extern syscalled
 global syscallISR
@@ -52,8 +32,11 @@ global syscallISR
 syscallISR: ;syscall handler
 
 	sti ;enable interrupts
-
 	pushad ;save registers
+
+	mov ax, cs
+	mov ds, ax ;ds = KERNEL_SEGMENT
+
 	pop dword [regs]
 	pop dword [regs + 4]
 	pop dword [regs + 8]
@@ -63,31 +46,23 @@ syscallISR: ;syscall handler
 	pop dword [regs + 24]
 	pop dword [regs + 28]
 
-	mov ax, cs
-	mov ds, ax ;ds = KERNEL_SEGMENT
-
-	mov byte [syscalled], 1 ;syscalled = 1
+	mov byte [syscalled], 1 ;syscalled = true
 
 	pop dword [retinfo]
-	pop dword [retinfo + 4]
-	pop dword [retinfo + 8]
-	pop word [retinfo + 12] ;now arguments are at the top of the stack
+	pop word [retinfo + 4] ;now arguments are at the top of the stack
 
 	pop ebx
 	shl ebx, 2 ;call *= 4
 
 	call dword [callTable + ebx]
-	mov [retval], ax
+	mov fs, ax
 
 	push ebx
 
-	push word [retinfo + 12]
-	push dword [retinfo + 8]
-	push dword [retinfo + 4]
+	push word [retinfo + 4]
 	push dword [retinfo]
 
-	mov ax, [segment]
-	mov ds, ax ;restore segment
+	mov byte [syscalled], 0 ;syscalled = false
 
 	push dword [regs + 28] ;restore registers
 	push dword [regs + 24]
@@ -97,9 +72,11 @@ syscallISR: ;syscall handler
 	push dword [regs + 8]
 	push dword [regs + 4]
 	push dword [regs]
-	popad
 
-	mov ax, [retval]
+	mov ax, [segment]
+	mov ds, ax ;restore segment
+
+	popad
 
 iret
 
@@ -107,30 +84,43 @@ SECTION .data
 
 callTable:
 
+	;core syscalls
+
+	extern kbrkpt
+	dd kbrkpt
+
 	;keyboard syscalls
 
-	extern getKey
+	extern kgetKey
+	dd kgetKey
 
-	dd getKey
+	extern ksetCallback
+	dd ksetCallback
+
+	extern ktoChar
+	dd ktoChar
 
 	;pit syscalls
 
-	extern sleep
-
-	dd sleep
+	extern ksleep
+	dd ksleep
 
 	;vga syscalls
 
-	extern clearText
-	extern putc
-	extern putn
-	extern puts
+	extern kclearText
+	dd kclearText
 
-	dd clearText
-	dd putc
-	dd putn
-	dd puts
+	extern kputc
+	dd kputc
+
+	extern kputn
+	dd kputn
+
+	extern kputs
+	dd kputs
+
+	extern ksetCursor
+	dd ksetCursor
 
 regs: times 32 db 0
-retinfo: times 14 db 0
-retval: dw 0
+retinfo: times 6 db 0

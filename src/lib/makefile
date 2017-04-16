@@ -22,6 +22,7 @@
 #SOFTWARE.
 
 export CPATH := $(shell find ../ -type d | tr '\n' ':')
+CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT)
 BIN := ../../bin
 
 all: lib

@@ -26,6 +26,7 @@
 SECTION .text
 
 extern kbdHandler
+extern segment
 global kbdISR
 
 kbdISR:
@@ -35,14 +36,16 @@ kbdISR:
 
 	mov ax, cs
 	mov ds, ax
+	mov ss, ax
 
 	call dword kbdHandler
 
 	mov al, 0x20
 	out 0x20, al
 
-	mov ax, ss
+	mov ax, [segment]
 	mov ds, ax
+	mov ss, ax
 
 	popad
 	sti

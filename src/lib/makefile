@@ -22,12 +22,13 @@
 #SOFTWARE.
 
 export CPATH := $(shell find ../ -type d | tr '\n' ':')
+
 CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT)
 BIN := ../../bin
 
 all: lib
 
-lib: arch.o math.o string.o syscall.o
+lib: arch.o math.o string.o usr.o
 
 arch.o: arch/arch.c
 	gcc $(CF) $^ $(LF) -o $(BIN)/$@
@@ -38,5 +39,8 @@ math.o: math/math.c
 string.o: string/string.c
 	gcc $(CF) $^ $(LF) -o $(BIN)/$@
 
-syscall.o: syscall/syscall.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
+usr.o: usr/usr.c
+	nasm -f elf usr/usr.asm -o usr.o
+	gcc $(CF) $^ $(LF) -o usrc.o
+	ld usr.o usrc.o -melf_i386 -r -o $(BIN)/usr.o
+	rm usr.o usrc.o

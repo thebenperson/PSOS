@@ -40,7 +40,7 @@ void initPIT() {
 	asm("out 0x40, %0" :: "a" (0xA9));
 	asm("out 0x40, %0" :: "a" (0x4));
 
-	installISR(8, &pitISR); //install irq handler
+	kinstallISR(8, KERNEL_SEGMENT, &pitISR); //install irq handler
 
 	asm("sti");
 

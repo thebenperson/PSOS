@@ -22,10 +22,13 @@
 #SOFTWARE.
 
 BIN := ../../bin
-KERNEL_SIZE=$(shell du -B 512 --apparent-size $(BIN)/kernel.bin | awk '{print $$1;}')
+KERNEL_SIZE := $(shell du -B 512 --apparent-size $(BIN)/kernel.bin | awk '{print $$1;}')
+
+CF := -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DKERNEL_SIZE=$(KERNEL_SIZE) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
+LF := -f bin
 
 all: loader.bin
 
 loader.bin: loader.asm
-	nasm -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DKERNEL_SIZE=$(KERNEL_SIZE) $^ -f bin -o $@
+	nasm $(CF) $^ $(LF) -o $@
 	mv $@ $(BIN)/$@

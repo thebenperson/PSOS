@@ -25,25 +25,15 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_SYSCALL_H
-
 #include "types.h"
+#include "usr.h"
 
-#define brkpt() syscall(0, 0)
+word syscall(volatile byte call, volatile word arg1, volatile word arg2, volatile word arg3) {
 
-#define getKey(b) syscall(1, b)
-#define setCallback(w) syscall(2, w)
-#define toChar(b) syscall(3, b)
+	asm("int 0x20" :: "b" ((word) call), "c" ((dword) arg1), "S" ((dword) arg2), "D" ((dword) arg3));
 
-#define sleep(w) syscall(4, w)
+	word retval;
+	asm("mov %0, fs" :: "g" (retval));
 
-#define clearText() syscall(5, 0)
-#define putc(b) syscall(6, b)
-//putn is mising
-#define puts(w) syscall(8, w)
-#define setCursor(b) syscall(9, b)
-
-extern word syscall(byte call, word arg);
-
-#define HG_LIB_SYSCALL_H
-#endif
+	return retval;
+}

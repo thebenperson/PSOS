@@ -25,28 +25,26 @@ SOFTWARE.
 
 */
 
-#include "syscall.h"
+#ifndef HG_LIB_SYSCALL_H
+
 #include "types.h"
 
-word syscall(volatile byte call, volatile word arg) {
+#define brkpt() syscall(0, 0, 0, 0)
+#define installISR(b, w1, w2) syscall(1, b, w1, w2)
 
-	asm("mov ax, ss");
-	asm("mov es, ax");
+#define getKey(b) syscall(2, b, 0, 0)
+#define setCallback(w) syscall(3, w, 0, 0)
+#define toChar(b) syscall(4, b, 0, 0)
 
-	asm("mov ss, %0" :: "a" (KERNEL_SEGMENT));
+#define sleep(w) syscall(5, w, 0, 0)
 
-	asm("push es:[%0]" :: "b" (&arg));
-	asm("push es:[%0]" :: "b" (&call));
+#define clearText() syscall(6, 0, 0, 0)
+#define putc(b) syscall(7, b, 0, 0)
+//putn is mising
+#define puts(w) syscall(9, w, 0, 0)
+#define setCursor(b) syscall(10, b, 0, 0)
 
-	asm("int 0x20");
+extern word syscall(byte call, word arg, word arg2, word arg3);
 
-	asm("add sp, 8");
-
-	asm("mov ax, cs");
-	asm("mov ss, ax");
-
-	word retval;
-	asm("mov %0, fs" :: "a" (retval));
-
-	return retval;
-}
+#define HG_LIB_SYSCALL_H
+#endif

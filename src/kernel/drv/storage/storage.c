@@ -29,10 +29,7 @@ SOFTWARE.
 #include "storage.h"
 #include "string.h"
 #include "types.h"
-#include "vga.h"
 
-#define ENTRIES 256
-#define FAT_SIZE 3
 #define ROOT_SIZE (ENTRIES * 32) / 512
 
 byte drive;
@@ -82,7 +79,25 @@ bool loadSector(byte start, byte length, word segment, word offset) {
 
 bool loadFile(mem16_t file, word segment, word offset) {
 
-	return loadSector(1 + kernelSize + FAT_SIZE + ROOT_SIZE + ((File*) file)->cluster, 1, segment, offset);
+	//load the FAT into memory
+	word fat[FAT_SIZE * (512 / 2)];
+	bool result = loadSector(1 + kernelSize, FAT_SIZE, KERNEL_SEGMENT, &fat);
+	if (!result) return false;
+
+	word base = 1 + kernelSize + FAT_SIZE + ROOT_SIZE; //offset to data area
+	word cluster = ((File*) file)->cluster;
+
+	do {
+
+		result = loadSector(base + cluster, 1, segment, offset);
+		if (!result) return false;
+
+		cluster = fat[cluster + 2] - 2; //cluster numbers start at 2; not 0
+		offset += 512;
+
+	} while (cluster != 0xFFFD); //0xFFFF - 2 = 0xFFFD
+
+	return true;
 
 }
 
@@ -130,7 +145,8 @@ bool openFile(mem16_t path, mem16_t file) {
 		if (strcmp(entry->name, path)) {
 
 			((File*) file)->attribute = entry->attribute;
-			((File*) file)->cluster = entry->cluster - 2;
+			((File*) file)->cluster = entry->cluster - 2; //cluster numbers start at 2; not 0
+
 			((File*) file)->size = entry->size;
 
 			return true;

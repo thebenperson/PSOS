@@ -23,84 +23,43 @@
 
 [BITS 16]
 
+SECTION .start
+extern main
+
+	mov bx, 1 ;syscall 1 (installISR)
+	mov ecx, 0x21 ;interrupt 0x21
+	mov esi, cs ;this segment
+	mov edi, callback
+	int 0x20 ;call installISR
+	;user mode interrupt is now installed
+	;allows kernel to call user mode functions
+
+	call dword main ;start the program
+
+	cli ;hang
+	hlt
+
+;ret
+
 SECTION .text
 
-extern segment
-extern syscalled
-global syscallISR
+global callback
+callback:
 
-syscallISR: ;syscall handler
+	pushad
 
-	sti ;enable interrupts
-	pushad ;save registers
+	mov cx, cs
+	mov ds, cx
+	mov ss, cx
 
-	mov ax, cs
-	mov ds, ax ;ds = KERNEL_SEGMENT
-	mov ss, ax
+	push eax
+	call dword ebx
+	add sp, 4
 
-	mov byte [syscalled], 1 ;syscalled = true
-
-	shl bx, 2 ;call *= 4
-
-	push edi
-	push esi
-	push ecx
-	call dword [callTable + bx]
-	add sp, 12
-
-	mov fs, ax
-
-	mov byte [syscalled], 0 ;syscalled = false
-
-	mov ax, [segment]
-	mov ds, ax ;restore segment
+	mov ax, 0x7E0 ;change me plz...
+	mov ds, ax
 	mov ss, ax
 
 	popad
 
 iret
-
-SECTION .data
-
-callTable:
-
-	;core syscalls
-
-	extern kbrkpt
-	dd kbrkpt
-
-	extern kinstallISR
-	dd kinstallISR
-
-	;keyboard syscalls
-
-	extern kgetKey
-	dd kgetKey
-
-	extern ksetCallback
-	dd ksetCallback
-
-	extern ktoChar
-	dd ktoChar
-
-	;pit syscalls
-
-	extern ksleep
-	dd ksleep
-
-	;vga syscalls
-
-	extern kclearText
-	dd kclearText
-
-	extern kputc
-	dd kputc
-
-	extern kputn
-	dd kputn
-
-	extern kputs
-	dd kputs
-
-	extern ksetCursor
-	dd ksetCursor

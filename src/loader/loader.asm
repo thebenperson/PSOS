@@ -32,9 +32,9 @@ db 1 ;sectors per cluster
 dw 1 + KERNEL_SIZE ;reserved sectors
 db 1 ;FATs
 dw 256 ;directory entries
-dw 1 + KERNEL_SIZE + 3 + ((256 * 32) / 512) + ((128 * 1024) / 512) ;sectors
+dw 1 + KERNEL_SIZE + FAT_SIZE + ((ENTRIES * 32) / 512) + CLUSTERS ;sectors
 db 0xF0 ;media descriptor byte
-dw 3 ;sectors per FAT
+dw FAT_SIZE ;sectors per FAT
 dw 0 ;sectors per track
 dw 0 ;heads
 dd 0 ;hidden sectors

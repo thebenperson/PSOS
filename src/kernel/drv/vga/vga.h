@@ -57,8 +57,6 @@ SOFTWARE.
 #define SET_MODE 0x6
 
 extern byte charAttr;
-extern byte charX;
-extern byte charY;
 
 extern void kclearText();
 extern void initVGA();

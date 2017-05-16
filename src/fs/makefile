@@ -22,15 +22,16 @@
 #SOFTWARE.
 
 export CPATH := $(shell find ../ -type d | tr '\n' ':')
+
 BIN := ../../bin
 
 all: fs.img sh.bin
 
 fs.img: fat16.asm
-	nasm $^ -f bin -o $@
+	nasm -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE) $^ -f bin -o $@
 	mv $@ $(BIN)/$@
 
 sh.bin: sh/main.c
 	gcc $(CF) $^ $(LF) -o sh.o
-	ld -melf_i386 sh.o $(BIN)/syscall.o -Tbin.ld -o $(BIN)/$@
+	ld -melf_i386 sh.o $(BIN)/arch.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
 	rm *.o

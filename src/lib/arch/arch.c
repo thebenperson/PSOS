@@ -28,6 +28,15 @@ SOFTWARE.
 #include "arch.h"
 #include "types.h"
 
+void cpuuid(mem16_t string) {
+
+	asm("cpuid" :: "a" ((dword) 0));
+	asm("mov %0, ebx" : "=r" (((dword*) string)[0]));
+	asm("mov %0, edx" : "=r" (((dword*) string)[1]));
+	asm("mov %0, ecx" : "=r" (((dword*) string)[2]));
+
+}
+
 void getRegs(mem16_t regs) {
 
 	asm("mov %0, ax" : "=r" (((struct regs*) regs)->ax));

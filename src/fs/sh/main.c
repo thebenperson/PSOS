@@ -25,43 +25,57 @@ SOFTWARE.
 
 */
 
+#include "arch.h"
 #include "kbd.h"
-#include "syscall.h"
 #include "types.h"
+#include "usr.h"
 
 void keyHandler(byte scanCode);
 
-UENTRY void main() {
+void main() {
+
+	char string[13];
+	cpuuid(&string);
+	string[0] = 'a';
+	string[12] = '\0';
+
+	puts("Vendor String: ");
+	puts(string);
 
 	setCursor(true);
-	puts("sh>");
+	puts("\n\nsh - a simple shell\nPress escape to exit.\n\nsh>");
 	setCallback(keyHandler);
 
-	while (!getKey(VK_ESC)) {
+	for (;;) {
 
-		sleep(100);
+		asm("hlt");
+
+		if (getKey(VK_ESC)) break;
+		if (getKey(VK_RETURN)) {
+
+			puts("\nsh>");
+			sleep(100); //enough time for driver to detect keyup
+
+		}
 
 	}
 
-	puts("\nGoodbye.");
-	HANG();
+	clearText();
+	puts("Goodbye.");
 
 }
 
-__attribute__((noreturn)) void keyHandler(byte scanCode) {
-
-	asm("mov eax, 0xDEADBEEF");
-	HANG();
+void keyHandler(byte scanCode) {
 
 	switch (scanCode) {
 
-		case VK_RETURN: puts("\nsh>");
-		break;
+		default: {
 
-		default: putc(toChar(scanCode));
+			char c = toChar(scanCode);
+			if (c) putc(c);
+
+		}
 
 	}
-
-	asm("retf");
 
 }

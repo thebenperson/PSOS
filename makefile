@@ -21,9 +21,15 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-export KERNEL_SEGMENT=0x7E0
-export CF = -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -m16
-export LF = -c -ffreestanding -Os
+#FAT16 options
+export CLUSTERS := 4085
+export ENTRIES := 256
+export FAT_SIZE := $(shell let "FAT_SIZE = ($(CLUSTERS) + 256 - 1) / 256"; echo $$FAT_SIZE)
+#Kernel options
+export KERNEL_SEGMENT := 0x7E0
+#Compile flags
+export CF := -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -m16
+export LF := -c -ffreestanding -Os
 
 all: PSOS
 
@@ -35,9 +41,8 @@ PSOS: loader kernel fs
 	sudo mount bin/PSOS.img mnt
 	sudo mv bin/sh.bin mnt/.
 	sudo umount mnt
-	truncate -s 1200K bin/PSOS.img
 	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img
-	mkisofs -o bin/PSOS.iso -V PSOS-dev -b PSOS.img bin
+	#mkisofs -o bin/PSOS.iso -V PSOS-dev -hard-disk-boot -b PSOS.img bin
 
 loader: kernel
 	make -C src/loader

@@ -36,7 +36,7 @@ extern byte kernelSize;
 extern word segment;
 extern bool syscalled;
 
-extern void installISR(word inturrupt, mem16_t handler);
+extern void kinstallISR(word inturrupt, mem16_t segment, mem16_t offset);
 
 #define HG_Kernel_H
 #endif

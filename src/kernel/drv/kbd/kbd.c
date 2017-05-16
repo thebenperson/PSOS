@@ -72,7 +72,7 @@ extern void kbdISR();
 
 void initKBD() {
 
-	installISR(9, kbdISR);
+	kinstallISR(9, KERNEL_SEGMENT, kbdISR);
 
 }
 
@@ -92,15 +92,7 @@ void kbdHandler() {
 
 	if (value && keyCallback) {
 
-		asm("push %0" :: "g" ((dword) scanCode));
-
-		asm("push %0" :: "a" ((dword) segment));
-		asm("push %0" :: "b" ((dword) keyCallback));
-
-		asm("mov ds, ax");
-		asm("mov ss, ax");
-
-		asm("retf");
+		asm("int 0x21" :: "b" ((dword) keyCallback), "a" ((dword) scanCode));
 
 	}
 

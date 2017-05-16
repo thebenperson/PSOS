@@ -31,6 +31,7 @@ SOFTWARE.
 #include "vga.h"
 
 byte charAttr = BG_GREEN;
+word port;
 word vidOffset = 0;
 
 void scroll();
@@ -54,6 +55,12 @@ void initVGA() {
 	ksetVGAMode(3);
 	kclearText();
 	ksetCursor(false);
+
+	word tPort;
+
+	asm("mov es, %0" :: "a" (0));
+	asm("mov %0, es:[0x463]" : "=g" (tPort)); //address 0x0:0x463 in BDA is base VGA port
+	port  = tPort;
 
 }
 
@@ -80,6 +87,8 @@ void kputc(char c) {
 		vidOffset += 2;
 
 	}
+
+	ksetPosition(vidOffset / 2);
 
 }
 
@@ -141,7 +150,7 @@ void kputs(mem16_t string) {
 
 		if (!c) {
 
-			ksetPosition(vidOffset);
+			ksetPosition(vidOffset / 2);
 			return;
 
 		}
@@ -174,23 +183,16 @@ void kputs(mem16_t string) {
 
 void ksetCursor(bool enabled) {
 
-	asm("int 0x10" :: "a" (1 << 8), "c" (enabled ? 0x7 : 0x700));
+	asm("int 0x10" :: "a" (1 << 8), "c" ((word) (enabled ? 0x7 : 0x700)));
 
 }
 
 void ksetPosition(word position) {
 
-	vidOffset = position;
-
-	word port;
-
-	asm("mov es, %0" :: "a" (0));
-	asm("mov %0, es:[0x463]" : "=g" (port));
-
-	asm("out %0, %1" :: "d" ((word) port), "a" ((byte) 0xF));
-	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) position & 0xFF));
-	asm("out %0, %1" :: "d" ((word) port), "a" ((byte) 0xE));
-	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) position >> 8));
+	asm("out %0, %1" :: "d" (port), "a" ((byte) 0xF));
+	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) (position & 0xFF)));
+	asm("out %0, %1" :: "d" (port), "a" ((byte) 0xE));
+	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) (position >> 8)));
 
 }
 

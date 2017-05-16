@@ -22,7 +22,8 @@
 #SOFTWARE.
 
 export CPATH := $(shell find ../ -type d | tr '\n' ':')
-CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT)
+
+CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
 BIN := ../../bin
 
 all: kernel.bin

@@ -103,18 +103,24 @@ bool loadFile(mem16_t file, word segment, word offset) {
 
 bool openFile(mem16_t path, mem16_t file) {
 
-	for (byte i = 0; ((char*) path)[i]; i++) {
+	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
-		if (((char*) path)[i] == '.') {
+	char tPath[11];
+	bool ext = false;
 
-			((char*) path)[i] = ((char*) path)[i + 1];
-			((char*) path)[i + 1] = ((char*) path)[i + 2];
-			((char*) path)[i + 2] = ((char*) path)[i + 3];
-			((char*) path)[i + 3] = '\0';
+	for (byte i = 0; i < 12; i++) {
 
-			break;
+		REMOTE();
+		char c = ((char*) path)[i];
+		LOCAL();
 
-		}
+		if (c == '\0') break;
+
+		if (c != '.') {
+
+			tPath[i - ext] = c;
+
+		} else ext = true;
 
 	}
 
@@ -142,7 +148,7 @@ bool openFile(mem16_t path, mem16_t file) {
 
 		}
 
-		if (strcmp(entry->name, path)) {
+		if (strcmp(entry->name, tPath)) {
 
 			((File*) file)->attribute = entry->attribute;
 			((File*) file)->cluster = entry->cluster - 2; //cluster numbers start at 2; not 0

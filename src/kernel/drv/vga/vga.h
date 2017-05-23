@@ -48,22 +48,14 @@ SOFTWARE.
 #define FG_WHITE 0x7
 #define FG_YELLOW 0x6
 
-#define CLEAR_TEXT 0x0
-#define PRINT_STRING 0x1
-#define SCROLL 0x2
-#define SET_ATTR 0x3
-#define SET_POS 0x4
-#define SET_CURSOR 0x5
-#define SET_MODE 0x6
-
-extern byte charAttr;
+extern byte vAttr;
 
 extern void kclearText();
 extern void initVGA();
-extern void kputn(int num, bool hex);
+extern void kputn(word num, bool hex);
 extern void kputs(mem16_t string);
 extern void ksetCursor(bool enabled);
-extern void ksetPosition(word position);
+extern word ksetPosition(word position);
 extern void ksetVGAMode(byte mode);
 
 #define HG_Kernel_VGA_H

@@ -13,7 +13,7 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+copies or substantial vPortions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -30,25 +30,11 @@ SOFTWARE.
 #include "types.h"
 #include "vga.h"
 
-byte charAttr = BG_GREEN;
-word port;
-word vidOffset = 0;
+byte vAttr = BG_GREEN;
+word vPort;
+word vOffset = 0;
 
 void scroll();
-
-void kclearText() {
-
-	asm("mov es, %0" :: "r" (0xB800));
-
-	for (word i = 0; i < (80 * 25 * 2); i += 2) {
-
-		asm("movw es:[%0], %1" :: "b" (i), "g" (charAttr << 8));
-
-	}
-
-	vidOffset = 0;
-
-}
 
 void initVGA() {
 
@@ -56,11 +42,25 @@ void initVGA() {
 	kclearText();
 	ksetCursor(false);
 
-	word tPort;
+	word tvPort;
 
 	asm("mov es, %0" :: "a" (0));
-	asm("mov %0, es:[0x463]" : "=g" (tPort)); //address 0x0:0x463 in BDA is base VGA port
-	port  = tPort;
+	asm("mov %0, es:[0x463]" : "=g" (tvPort)); //address 0x0:0x463 in BDA is base VGA vPort
+	vPort  = tvPort;
+
+}
+
+void kclearText() {
+
+	asm("mov es, %0" :: "r" (0xB800));
+
+	for (word i = 0; i < (80 * 25 * 2); i += 2) {
+
+		asm("movw es:[%0], %1" :: "b" (i), "g" (vAttr << 8));
+
+	}
+
+	vOffset = 0;
 
 }
 
@@ -68,31 +68,31 @@ void kputc(char c) {
 
 	asm("mov es, %0" :: "a" (0xB800));
 
-	if (vidOffset >= (80 * 25 * 2)) {
+	if (vOffset >= (80 * 25 * 2)) {
 
 		scroll();
-		vidOffset = (80 * 24 * 2);
+		vOffset = (80 * 24 * 2);
 
 	}
 
 	if (c == '\n') {
 
-		vidOffset += 160 - (vidOffset % 160);
+		vOffset += 160 - (vOffset % 160);
 
 	} else {
 
-		asm("mov es:[%0], %1" :: "b" (vidOffset), "r" (c));
-		asm("mov es:[bx + 1], %0" :: "r" (charAttr));
+		asm("mov es:[%0], %1" :: "b" (vOffset), "r" (c));
+		asm("mov es:[bx + 1], %0" :: "r" (vAttr));
 
-		vidOffset += 2;
+		vOffset += 2;
 
 	}
 
-	ksetPosition(vidOffset / 2);
+	ksetPosition(vOffset);
 
 }
 
-void kputn(int num, bool hex) {
+void kputn(word num, bool hex) {
 
 	if (hex) kputs("0x");
 
@@ -138,7 +138,7 @@ void kputn(int num, bool hex) {
 
 void kputs(mem16_t string) {
 
-	word tSegment = syscalled ? segment : KERNEL_SEGMENT;
+	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
 	asm("mov es, %0" :: "r" (0xB800));
 
@@ -150,28 +150,28 @@ void kputs(mem16_t string) {
 
 		if (!c) {
 
-			ksetPosition(vidOffset / 2);
+			ksetPosition(vOffset);
 			return;
 
 		}
 
-		if (vidOffset >= (80 * 25 * 2)) {
+		if (vOffset >= (80 * 25 * 2)) {
 
 			scroll();
-			vidOffset = (80 * 24 * 2);
+			vOffset = (80 * 24 * 2);
 
 		}
 
 		if (c == '\n') {
 
-			vidOffset += 160 - (vidOffset % 160);
+			vOffset += 160 - (vOffset % 160);
 
 		} else {
 
-			asm("mov es:[%0], %1" :: "b" (vidOffset), "r" (c));
-			asm("mov es:[bx + 1], %0" :: "r" (charAttr));
+			asm("mov es:[%0], %1" :: "b" (vOffset), "r" (c));
+			asm("mov es:[bx + 1], %0" :: "r" (vAttr));
 
-			vidOffset += 2;
+			vOffset += 2;
 
 		}
 
@@ -187,12 +187,19 @@ void ksetCursor(bool enabled) {
 
 }
 
-void ksetPosition(word position) {
+word ksetPosition(word position) {
 
-	asm("out %0, %1" :: "d" (port), "a" ((byte) 0xF));
-	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) (position & 0xFF)));
-	asm("out %0, %1" :: "d" (port), "a" ((byte) 0xE));
-	asm("out %0, %1" :: "d" ((word) (port + 1)), "a" ((byte) (position >> 8)));
+	if (position == 0xFFFF) return vOffset;
+
+	vOffset = position;
+	position /= 2;
+
+	asm("out %0, %1" :: "d" (vPort), "a" ((byte) 0xF));
+	asm("out %0, %1" :: "d" ((word) (vPort + 1)), "a" ((byte) (position & 0xFF)));
+	asm("out %0, %1" :: "d" (vPort), "a" ((byte) 0xE));
+	asm("out %0, %1" :: "d" ((word) (vPort + 1)), "a" ((byte) (position >> 8)));
+
+	return 0;
 
 }
 
@@ -214,6 +221,12 @@ void scroll() {
 	}
 
 	for (size_t i = (80 * 24 * 2); i < (80 * 25 * 2); i += 2)
-		asm("mov es:[%0], %1" :: "b" (i), "a" (charAttr << 8));
+		asm("mov es:[%0], %1" :: "b" (i), "a" (vAttr << 8));
+
+}
+
+void setAttr(byte attr) {
+
+	vAttr = attr;
 
 }

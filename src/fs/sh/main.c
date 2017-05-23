@@ -25,33 +25,35 @@ SOFTWARE.
 
 */
 
-#include "arch.h"
 #include "kbd.h"
 #include "types.h"
 #include "usr.h"
 
 void keyHandler(byte scanCode);
 
+byte i = 0;
+char buffer[9];
+
 void main() {
 
-	char string[13];
-	cpuuid(&string);
-	string[0] = 'a';
-	string[12] = '\0';
-
-	puts("Vendor String: ");
-	puts(string);
-
 	setCursor(true);
-	puts("\n\nsh - a simple shell\nPress escape to exit.\n\nsh>");
+	puts("sh - a simple shell\nPress escape to exit.\n\nsh>");
 	setCallback(keyHandler);
 
-	for (;;) {
+	for (byte b = 0; b < 500; b++) {
 
 		asm("hlt");
 
 		if (getKey(VK_ESC)) break;
 		if (getKey(VK_RETURN)) {
+
+			putc('\n');
+			exec(buffer);
+
+			for (byte i = 0; i < 8; i++)
+				buffer[i] = 0;
+
+			i = 0;
 
 			puts("\nsh>");
 			sleep(100); //enough time for driver to detect keyup
@@ -60,8 +62,7 @@ void main() {
 
 	}
 
-	clearText();
-	puts("Goodbye.");
+	setCursor(false);
 
 }
 
@@ -69,10 +70,62 @@ void keyHandler(byte scanCode) {
 
 	switch (scanCode) {
 
+		case VK_LEFT:
+
+			if (i) {
+
+				i--;
+				setPosition(getPosition() - 2);
+
+			}
+
+		break;
+
+		case VK_RIGHT:
+
+			if (i < 8) {
+
+				i++;
+				setPosition(getPosition() + 2);
+
+			}
+
+		break;
+
+		case VK_BKSPACE:
+
+			if (i) {
+
+				buffer[i--] = '\0';
+				word position = getPosition() - 2;
+				setPosition(position);
+				putc('\0');
+				setPosition(position);
+
+			}
+
+		break;
+
+		case VK_L:
+
+			if (getKey(VK_LCTRL)) {
+
+				clearText();
+				puts("sh>");
+
+				break;
+
+			}
+
 		default: {
 
 			char c = toChar(scanCode);
-			if (c) putc(c);
+			if ((c) && (i < 8)) {
+
+				buffer[i++] = c;
+				putc(c);
+
+			}
 
 		}
 

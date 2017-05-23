@@ -25,8 +25,8 @@
 
 SECTION .text
 
-extern segment
 extern syscalled
+extern uSegment
 global syscallISR
 
 syscallISR: ;syscall handler
@@ -48,15 +48,17 @@ syscallISR: ;syscall handler
 	call dword [callTable + bx]
 	add sp, 12
 
-	mov fs, ax
+	mov es, ax
 
 	mov byte [syscalled], 0 ;syscalled = false
 
-	mov ax, [segment]
+	mov ax, [uSegment]
 	mov ds, ax ;restore segment
 	mov ss, ax
 
 	popad
+
+	mov ax, es
 
 iret
 
@@ -68,6 +70,9 @@ callTable:
 
 	extern kbrkpt
 	dd kbrkpt
+
+	extern kexec
+	dd kexec
 
 	extern kinstallISR
 	dd kinstallISR
@@ -104,3 +109,9 @@ callTable:
 
 	extern ksetCursor
 	dd ksetCursor
+
+	extern ksetPosition
+	dd ksetPosition
+
+	extern setAttr
+	dd setAttr

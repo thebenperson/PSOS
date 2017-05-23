@@ -13,6 +13,7 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
+
 copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -28,12 +29,13 @@ SOFTWARE.
 #include "arch.h"
 #include "types.h"
 
-void cpuuid(mem16_t string) {
+void cpuid(mem16_t string) {
 
-	asm("cpuid" :: "a" ((dword) 0));
-	asm("mov %0, ebx" : "=r" (((dword*) string)[0]));
-	asm("mov %0, edx" : "=r" (((dword*) string)[1]));
-	asm("mov %0, ecx" : "=r" (((dword*) string)[2]));
+	asm("cpuid" :
+		"=b" (((dword*) string)[0]),
+		"=d" (((dword*) string)[1]),
+		"=c" (((dword*) string)[2])
+		: "a" ((dword) 0));
 
 }
 

@@ -33,8 +33,8 @@ SOFTWARE.
 #define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
 
 extern byte kernelSize;
-extern word segment;
 extern bool syscalled;
+extern word uSegment;
 
 extern void kinstallISR(word inturrupt, mem16_t segment, mem16_t offset);
 

@@ -28,12 +28,13 @@ SOFTWARE.
 #include "types.h"
 #include "usr.h"
 
-word syscall(volatile byte call, volatile word arg1, volatile word arg2, volatile word arg3) {
-
-	asm("int 0x20" :: "b" ((word) call), "c" ((dword) arg1), "S" ((dword) arg2), "D" ((dword) arg3));
+word syscall(byte call, word arg1, word arg2, word arg3) {
 
 	word retval;
-	asm("mov %0, fs" :: "g" (retval));
+
+	asm("int 0x20"
+		: "=a" (retval)
+		: "b" ((word) call), "c" ((dword) arg1), "S" ((dword) arg2), "D" ((dword) arg3));
 
 	return retval;
 }

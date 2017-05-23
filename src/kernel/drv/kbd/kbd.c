@@ -29,7 +29,8 @@ SOFTWARE.
 #include "kernel.h"
 #include "kbd.h"
 
-mem16_t keyCallback = NULL;
+word callback = NULL; //volatile to avoid optimization in kexec
+word cTunnel = NULL; //volatile to avoid optimization in kexec
 volatile bool keyState[87];
 char keyMap[] = {
 
@@ -90,9 +91,9 @@ void kbdHandler() {
 
 	keyState[--scanCode] = value;
 
-	if (value && keyCallback) {
+	if (value && callback) {
 
-		asm("int 0x21" :: "b" ((dword) keyCallback), "a" ((dword) scanCode));
+		asm("int 0x21" :: "b" ((dword) callback), "a" ((dword) scanCode));
 
 	}
 
@@ -104,9 +105,12 @@ bool kgetKey(byte key) {
 
 }
 
-void ksetCallback(mem16_t callback) {
+void ksetCallback(mem16_t tunnel, mem16_t offset) {
 
-	keyCallback = callback;
+	cTunnel = tunnel;
+	callback = offset;
+
+	kinstallISR(0x21, uSegment, tunnel); //important: uSegment not this segment
 
 }
 

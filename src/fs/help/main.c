@@ -1,7 +1,9 @@
 #include "usr.h"
 
 char string[] =
-"Commands:";
+"Commands:\n"
+"-------------------------------\n"
+"help: display this help message";
 
 void main() {
 

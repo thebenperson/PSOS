@@ -38,10 +38,10 @@ lib:
 
 PSOS: loader kernel fs
 	cat bin/loader.bin bin/kernel.bin bin/fs.img > bin/$@.img
-	sudo mount bin/PSOS.img mnt
-	sudo mv bin/sh.bin mnt/.
-	sudo umount mnt
 	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img
+	sudo mount bin/PSOS.img mnt
+	sudo mv bin/*.bin mnt/.
+	sudo umount mnt
 	#mkisofs -o bin/PSOS.iso -V PSOS-dev -hard-disk-boot -b PSOS.img bin
 
 loader: kernel

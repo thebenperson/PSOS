@@ -29,22 +29,33 @@ SOFTWARE.
 
 #include "types.h"
 
+extern void tunnel();
+
+//core syscalls
 #define brkpt() syscall(0, 0, 0, 0)
-#define installISR(b, w1, w2) syscall(1, b, w1, w2)
+#define exec(w) syscall (1, w, 0, 0)
+#define installISR(b, w1, w2) syscall(2, b, w1, w2)
 
-#define getKey(b) syscall(2, b, 0, 0)
-#define setCallback(w) syscall(3, w, 0, 0)
-#define toChar(b) syscall(4, b, 0, 0)
+//keyboard syscalls
+#define getKey(b) syscall(3, b, 0, 0)
+#define setCallback(w) syscall(4, tunnel, w, 0)
+#define toChar(b) syscall(5, b, 0, 0)
 
-#define sleep(w) syscall(5, w, 0, 0)
+//pit syscalls
+#define sleep(w) syscall(6, w, 0, 0)
 
-#define clearText() syscall(6, 0, 0, 0)
-#define putc(b) syscall(7, b, 0, 0)
-//putn is mising
-#define puts(w) syscall(9, w, 0, 0)
-#define setCursor(b) syscall(10, b, 0, 0)
+//vga syscalls
+#define clearText() syscall(7, 0, 0, 0)
+#define putc(b) syscall(8, b, 0, 0)
+#define putn(w, b) syscall(9, w, b, 0)
+#define puts(w) syscall(10, w, 0, 0)
+#define setCursor(b) syscall(11, b, 0, 0)
+#define setPosition(w) syscall(12, w, 0, 0)
+#define setAttr(b) syscall(13, b, 0, 0)
 
-extern word syscall(byte call, word arg, word arg2, word arg3);
+#define getPosition() setPosition(0xFFFF)
+
+extern word syscall(byte call, word arg1, word arg2, word arg3);
 
 #define HG_LIB_SYSCALL_H
 #endif

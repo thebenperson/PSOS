@@ -36,7 +36,7 @@ SOFTWARE.
 
 byte kernelSize;
 bool syscalled = false;
-word segment;
+word uSegment = KERNEL_SEGMENT;
 char versionString[] =
 "PSOS (Pretty Simple/Stupid Operating System) Development Build\n"
 "Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>\n";
@@ -56,7 +56,7 @@ KENTRY void kmain() {
 
 	if (!kexec("SH.BIN")) panic("Could not locate SH.BIN");
 
-	kputs("System ready for shutdown\nPlease power off and remove boot medium");
+	kputs("\n\nSystem ready for shutdown\nPlease power off and remove boot medium");
 	HANG();
 
 }
@@ -65,9 +65,9 @@ void kbrkpt() {
 
 	syscalled = false;
 
-	byte old = charAttr;
+	byte old = vAttr;
 
-	charAttr = BG_WHITE | FG_YELLOW;
+	vAttr = BG_WHITE | FG_YELLOW;
 	kclearText();
 
 	kputs("Breakpoint: press return to continue\n");
@@ -84,31 +84,44 @@ void kbrkpt() {
 
 	keyState[VK_RETURN] = false;
 
-	charAttr = old;
+	vAttr = old;
 	kclearText();
 
 }
 
 bool kexec(mem16_t path) {
 
+	word tCallback = callback;
+	callback = NULL;
+
+	word tTunnel = cTunnel;
+	word tSegment = uSegment;
+
 	File file;
 
 	bool result = openFile(path, &file);
 	if (!result) return false;
 
-	segment = KERNEL_SEGMENT + (((1 + kernelSize) * 512) / 16);
-	result = loadFile(&file, segment, 0);
+	uSegment += (((1 + kernelSize) * 512) / 16);
+	result = loadFile(&file, uSegment, 0);
 
 	if (!result) return false;
 
-	asm("xor eax, eax");
-	asm("mov ds, %0" :: "a" (segment));
-	asm("mov ss, ax");
+	kinstallISR(0x21, uSegment, 0); //maybe there's a better way?
 
-	asm("push eax");
-	asm("push 0");
+	asm("mov ds, %0" :: "r" (uSegment));
+	asm("mov ss, %0" :: "r" (uSegment));
+	asm("int 0x21");
+	asm("mov ds, %0" :: "r" (KERNEL_SEGMENT));
+	asm("mov ss, %0" :: "r" (KERNEL_SEGMENT));
 
-	asm("retf");
+	uSegment = tSegment;
+	cTunnel = tTunnel;
+	callback = tCallback;
+
+	kinstallISR(0x21, uSegment, cTunnel); //reinstate tunnel
+
+	return true;
 
 }
 
@@ -137,7 +150,7 @@ void kinstallISR(word num, mem16_t segment, mem16_t offset) {
 
 __attribute__((noreturn)) void panic(mem16_t reason) {
 
-	charAttr = BG_RED;
+	vAttr = BG_RED;
 	kclearText();
 
 	kputs("KERNEL PANIC: ");

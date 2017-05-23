@@ -49,7 +49,7 @@ typedef struct regs {
 
 } regs;
 
-void cpuuid(mem16_t string);
+void cpuid(mem16_t string);
 void getRegs(mem16_t regs);
 
 #define HG_LIB_Arch_H

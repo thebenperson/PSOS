@@ -26,25 +26,15 @@
 SECTION .start
 extern main
 
-	mov bx, 1 ;syscall 1 (installISR)
-	mov ecx, 0x21 ;interrupt 0x21
-	mov esi, cs ;this segment
-	mov edi, callback
-	int 0x20 ;call installISR
-	;user mode interrupt is now installed
-	;allows kernel to call user mode functions
+	sti
+	call dword main
 
-	call dword main ;start the program
-
-	cli ;hang
-	hlt
-
-;ret
+iret
 
 SECTION .text
 
-global callback
-callback:
+global tunnel
+tunnel:
 
 	pushad
 

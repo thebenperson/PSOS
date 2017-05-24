@@ -91,11 +91,8 @@ void kbdHandler() {
 
 	keyState[--scanCode] = value;
 
-	if (value && callback) {
-
+	if (value && callback)
 		asm("int 0x21" :: "b" ((dword) callback), "a" ((dword) scanCode));
-
-	}
 
 }
 
@@ -110,7 +107,7 @@ void ksetCallback(mem16_t tunnel, mem16_t offset) {
 	cTunnel = tunnel;
 	callback = offset;
 
-	kinstallISR(0x21, uSegment, tunnel); //important: uSegment not this segment
+	kinstallISR(0x21, uSegment, cTunnel); //important: uSegment not this segment
 
 }
 

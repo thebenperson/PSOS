@@ -25,7 +25,7 @@ export CPATH := $(shell find ../ -type d | tr '\n' ':')
 
 BIN := ../../bin
 
-all: fs.img sh.bin help.bin
+all: fs.img sh.bin help.bin clear.bin
 
 fs.img: fat16.asm
 	nasm -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE) $^ -f bin -o $@
@@ -37,6 +37,11 @@ sh.bin: sh/main.c
 	rm *.o
 
 help.bin: help/main.c
+	gcc $(CF) $^ $(LF) -o help.o
+	ld -melf_i386 help.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
+	rm *.o
+
+clear.bin: clear/main.c
 	gcc $(CF) $^ $(LF) -o help.o
 	ld -melf_i386 help.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
 	rm *.o

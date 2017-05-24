@@ -1,9 +1,12 @@
 #include "usr.h"
 
 char string[] =
-"Commands:\n"
+"          Commands:\n"
 "-------------------------------\n"
-"help: display this help message";
+"CLEAR: clear the screen\n"
+"HELP: display this help message\n"
+"SH: a simple shell\n"
+"-------------------------------\n";
 
 void main() {
 

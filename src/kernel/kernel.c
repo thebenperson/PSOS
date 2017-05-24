@@ -54,7 +54,7 @@ KENTRY void kmain() {
 	kputs(versionString);
 	kputs("\nReady...\n\n");
 
-	if (!kexec("SH.BIN")) panic("Could not locate SH.BIN");
+	if(!kexec("SH.BIN")) panic("Could not locate SH.BIN");
 
 	kputs("\n\nSystem ready for shutdown\nPlease power off and remove boot medium");
 	HANG();
@@ -92,7 +92,7 @@ void kbrkpt() {
 bool kexec(mem16_t path) {
 
 	word tCallback = callback;
-	callback = NULL;
+	//callback = NULL;
 
 	word tTunnel = cTunnel;
 	word tSegment = uSegment;
@@ -103,15 +103,19 @@ bool kexec(mem16_t path) {
 	if (!result) return false;
 
 	uSegment += (((1 + kernelSize) * 512) / 16);
-	result = loadFile(&file, uSegment, 0);
 
+	result = loadFile(&file, uSegment, 0);
 	if (!result) return false;
 
 	kinstallISR(0x21, uSegment, 0); //maybe there's a better way?
 
 	asm("mov ds, %0" :: "r" (uSegment));
 	asm("mov ss, %0" :: "r" (uSegment));
+
+	asm("pushad");
 	asm("int 0x21");
+	asm("popad");
+
 	asm("mov ds, %0" :: "r" (KERNEL_SEGMENT));
 	asm("mov ss, %0" :: "r" (KERNEL_SEGMENT));
 

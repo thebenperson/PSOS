@@ -32,7 +32,7 @@ SOFTWARE.
 void keyHandler(byte scanCode);
 
 byte i = 0;
-char buffer[9];
+char buffer[13];
 
 void main() {
 
@@ -40,7 +40,7 @@ void main() {
 	puts("sh - a simple shell\nPress escape to exit.\n\nsh>");
 	setCallback(keyHandler);
 
-	for (byte b = 0; b < 500; b++) {
+	for (;;) {
 
 		asm("hlt");
 
@@ -48,14 +48,24 @@ void main() {
 		if (getKey(VK_RETURN)) {
 
 			putc('\n');
-			exec(buffer);
 
-			for (byte i = 0; i < 8; i++)
-				buffer[i] = 0;
+			buffer[i++] = '.';
+			buffer[i++] = 'B';
+			buffer[i++] = 'I';
+			buffer[i++] = 'N';
+			buffer[i++] = '\0';
+
+			if (!exec(buffer)) {
+
+				puts("Error: ");
+				puts(buffer);
+				puts(" does not exist\nEnter HELP for help\n");
+
+			}
 
 			i = 0;
 
-			puts("\nsh>");
+			puts("sh>");
 			sleep(100); //enough time for driver to detect keyup
 
 		}

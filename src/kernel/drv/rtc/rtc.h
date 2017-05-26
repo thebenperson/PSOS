@@ -25,35 +25,31 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_H
+#ifndef HG_Kernel_RTC_H
 
 #include "types.h"
 
-#define REMOTE() asm("mov ds, %0" :: "a" (tSegment));
-#define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
+#define T_YEAR 0x1
+#define T_MONTH 0x2
+#define T_DAY 0x4
+#define T_HOUR 0x8
+#define T_MIN 0x10
+#define T_SEC 0x20
+#define T_ALL 0x3F
 
-extern byte kernelSize;
-extern bool syscalled;
-extern word uSegment;
+typedef struct {
 
-extern void kinstallISR(byte num, mem16_t segment, mem16_t offset);
+	byte year;
+	byte month;
+	byte day;
+	byte hour;
+	byte min;
+	byte sec;
 
-static inline byte inb(word port) {
+} Time;
 
-	byte val;
-	asm("in %0, %1"
-		: "=a" (val)
-		: "d" (port));
+extern void initRTC();
+extern void kgetTime(mem16_t time, byte mask);
 
-	return val;
-
-}
-
-static inline void outb(word port, byte val) {
-
-	asm("out %0, %1" :: "Nd" (port), "a" (val));
-
-}
-
-#define HG_Kernel_H
+#define HG_Kernel_RTC_H
 #endif

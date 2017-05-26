@@ -28,6 +28,7 @@ SOFTWARE.
 #include "arch.h"
 #include "kbd.h"
 #include "pit.h"
+#include "rtc.h"
 #include "storage.h"
 #include "vga.h"
 #include "kernel.h"
@@ -58,34 +59,6 @@ KENTRY void kmain() {
 
 	kputs("\n\nSystem ready for shutdown\nPlease power off and remove boot medium");
 	HANG();
-
-}
-
-void kbrkpt() {
-
-	syscalled = false;
-
-	byte old = vAttr;
-
-	vAttr = BG_WHITE | FG_YELLOW;
-	kclearText();
-
-	kputs("Breakpoint: press return to continue\n");
-
-	struct regs regs;
-	getRegs(&regs);
-
-	kputs("\nFree mem: ");
-	kputn((regs.sp - (kernelSize * 512)) / 1024, false);
-	kputs("KiB");
-
-	while (!keyState[VK_RETURN])
-		asm ("hlt");
-
-	keyState[VK_RETURN] = false;
-
-	vAttr = old;
-	kclearText();
 
 }
 
@@ -138,12 +111,13 @@ void initKernel() {
 
 	initKBD();
 	initPIT();
+	initRTC();
 	initStorage();
 	initVGA();
 
 }
 
-void kinstallISR(word num, mem16_t segment, mem16_t offset) {
+void kinstallISR(byte num, mem16_t segment, mem16_t offset) {
 
 	asm("mov es, %0" :: "r" (0));
 

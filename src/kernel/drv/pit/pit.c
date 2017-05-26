@@ -36,9 +36,9 @@ void initPIT() {
 
 	asm("cli");
 
-	asm("out 0x43, %0" :: "a" (0x34));
-	asm("out 0x40, %0" :: "a" (0xA9));
-	asm("out 0x40, %0" :: "a" (0x4));
+	outb(0x43, 0x34);
+	outb(0x40, 0xA9);
+	outb(0x40, 0x4);
 
 	kinstallISR(8, KERNEL_SEGMENT, &pitISR); //install irq handler
 

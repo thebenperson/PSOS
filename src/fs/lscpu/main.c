@@ -25,35 +25,18 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_H
+#include "arch.h"
+#include "usr.h"
 
-#include "types.h"
+void main() {
 
-#define REMOTE() asm("mov ds, %0" :: "a" (tSegment));
-#define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
+	char vendorString[13];
+	vendorString[12] = '\0';
 
-extern byte kernelSize;
-extern bool syscalled;
-extern word uSegment;
+	cpuid(&vendorString);
 
-extern void kinstallISR(byte num, mem16_t segment, mem16_t offset);
-
-static inline byte inb(word port) {
-
-	byte val;
-	asm("in %0, %1"
-		: "=a" (val)
-		: "d" (port));
-
-	return val;
+	puts("Vendor String: ");
+	puts(vendorString);
+	putc('\n');
 
 }
-
-static inline void outb(word port, byte val) {
-
-	asm("out %0, %1" :: "Nd" (port), "a" (val));
-
-}
-
-#define HG_Kernel_H
-#endif

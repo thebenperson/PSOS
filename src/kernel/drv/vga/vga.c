@@ -94,7 +94,11 @@ void kputc(char c) {
 
 void kputn(word num, bool hex) {
 
+	bool tSyscalled = syscalled;
+
+	syscalled = false;
 	if (hex) kputs("0x");
+	syscalled = tSyscalled;
 
 	byte base = hex ? 16 : 10;
 	byte nCarry = 0;
@@ -194,10 +198,10 @@ word ksetPosition(word position) {
 	vOffset = position;
 	position /= 2;
 
-	asm("out %0, %1" :: "d" (vPort), "a" ((byte) 0xF));
-	asm("out %0, %1" :: "d" ((word) (vPort + 1)), "a" ((byte) (position & 0xFF)));
-	asm("out %0, %1" :: "d" (vPort), "a" ((byte) 0xE));
-	asm("out %0, %1" :: "d" ((word) (vPort + 1)), "a" ((byte) (position >> 8)));
+	outb(vPort, 0xF);
+	outb(vPort + 1, position & 0xFF);
+	outb(vPort, 0xE);
+	outb(vPort + 1, position >> 8);
 
 	return 0;
 

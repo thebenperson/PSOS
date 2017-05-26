@@ -27,6 +27,8 @@ SOFTWARE.
 
 #ifndef HG_Kernel_PIT_H
 
+#include "types.h"
+
 extern void initPIT();
 extern void ksleep(size_t mili);
 

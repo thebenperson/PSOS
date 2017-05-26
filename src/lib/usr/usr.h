@@ -29,33 +29,34 @@ SOFTWARE.
 
 #include "types.h"
 
+extern word syscall(byte call, word arg1, word arg2, word arg3);
 extern void tunnel();
 
 //core syscalls
-#define brkpt() syscall(0, 0, 0, 0)
-#define exec(w) syscall (1, w, 0, 0)
-#define installISR(b, w1, w2) syscall(2, b, w1, w2)
+static inline bool exec(mem16_t path) { return syscall(0, path, 0, 0); }
+static inline void installISR(byte num, word segment, word offset) { syscall(1, num, segment, offset); }
 
 //keyboard syscalls
-#define getKey(b) syscall(3, b, 0, 0)
-#define setCallback(w) syscall(4, tunnel, w, 0)
-#define toChar(b) syscall(5, b, 0, 0)
+static inline bool getKey(byte key) { return syscall(2, key, 0, 0); }
+static inline void setCallback(mem16_t callback) { syscall(3, tunnel, callback, 0); }
+static inline char toChar(byte key) { return syscall(4, key, 0, 0); }
 
 //pit syscalls
-#define sleep(w) syscall(6, w, 0, 0)
+static inline void sleep(word milli) { syscall(5, milli, 0, 0); }
+
+//rtc syscalls
+static inline void getTime(mem16_t time, byte mask) { syscall(6, time, mask, 0); }
 
 //vga syscalls
-#define clearText() syscall(7, 0, 0, 0)
-#define putc(b) syscall(8, b, 0, 0)
-#define putn(w, b) syscall(9, w, b, 0)
-#define puts(w) syscall(10, w, 0, 0)
-#define setCursor(b) syscall(11, b, 0, 0)
-#define setPosition(w) syscall(12, w, 0, 0)
-#define setAttr(b) syscall(13, b, 0, 0)
+static inline void clearText() { syscall(7, 0, 0, 0); }
+static inline void putc(char c) { syscall(8, c, 0, 0); }
+static inline void putn(size_t num, bool hex) { syscall(9, num, hex, 0); }
+static inline void puts(mem16_t string) { syscall(10, string, 0, 0); }
+static inline void setCursor(bool enabled) { syscall(11, enabled, 0, 0); }
+static inline void setPosition(word pos) { syscall(12, pos, 0, 0); }
+static inline void setAttr(byte attr) { syscall(13, attr, 0, 0); }
 
-#define getPosition() setPosition(0xFFFF)
-
-extern word syscall(byte call, word arg1, word arg2, word arg3);
+static inline word getPosition() { return syscall(12, 0xFFFF, 0, 0); }
 
 #define HG_LIB_SYSCALL_H
 #endif

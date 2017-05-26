@@ -105,7 +105,7 @@ bool openFile(mem16_t path, mem16_t file) {
 
 	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
-	char tPath[11];
+	char tPath[12];
 	bool ext = false;
 
 	for (byte i = 0; i < 12; i++) {
@@ -114,11 +114,12 @@ bool openFile(mem16_t path, mem16_t file) {
 		char c = ((char*) path)[i];
 		LOCAL();
 
-		if (c == '\0') break;
-
 		if (c != '.') {
 
+			if ((c >= 'a') && (c <= 'z')) c -= 32; //to uppercase
+
 			tPath[i - ext] = c;
+			if (c == '\0') break;
 
 		} else ext = true;
 

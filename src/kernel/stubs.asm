@@ -68,9 +68,6 @@ callTable:
 
 	;core syscalls
 
-	extern kbrkpt
-	dd kbrkpt
-
 	extern kexec
 	dd kexec
 
@@ -92,6 +89,11 @@ callTable:
 
 	extern ksleep
 	dd ksleep
+
+	;rtc syscalls
+
+	extern kgetTime
+	dd kgetTime
 
 	;vga syscalls
 

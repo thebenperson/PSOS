@@ -50,23 +50,21 @@ void main() {
 			putc('\n');
 
 			buffer[i++] = '.';
-			buffer[i++] = 'B';
-			buffer[i++] = 'I';
-			buffer[i++] = 'N';
+			buffer[i++] = 'b';
+			buffer[i++] = 'i';
+			buffer[i++] = 'n';
 			buffer[i++] = '\0';
 
 			if (!exec(buffer)) {
 
-				puts("Error: ");
-				puts(buffer);
-				puts(" does not exist\nEnter HELP for help\n");
+				puts("Error: command does not exist\nEnter 'help' for help\n");
 
 			}
 
 			i = 0;
 
 			puts("sh>");
-			sleep(100); //enough time for driver to detect keyup
+			sleep(200); //enough time for driver to detect keyup
 
 		}
 

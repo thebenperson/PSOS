@@ -25,35 +25,34 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_H
-
+#include "rtc.h"
 #include "types.h"
+#include "usr.h"
 
-#define REMOTE() asm("mov ds, %0" :: "a" (tSegment));
-#define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
+char* months[] = {
 
-extern byte kernelSize;
-extern bool syscalled;
-extern word uSegment;
+	"January", "Febuary", "March", "April",
+	"May", "June", "July", "August",
+	"September", "October", "November", "December"
 
-extern void kinstallISR(byte num, mem16_t segment, mem16_t offset);
+};
 
-static inline byte inb(word port) {
+void main() {
 
-	byte val;
-	asm("in %0, %1"
-		: "=a" (val)
-		: "d" (port));
+	volatile Time time;
+	getTime(&time, T_ALL);
 
-	return val;
+	puts(months[time.month - 1]);
+	putc(' ');
+	putn(time.day, false);
+	puts(", 20");
+	putn(time.year, false);
+	putc('\n');
+	putn(time.hour, false);
+	putc(':');
+	putn(time.min, false);
+	putc(':');
+	putn(time.sec, false);
+	putc('\n');
 
 }
-
-static inline void outb(word port, byte val) {
-
-	asm("out %0, %1" :: "Nd" (port), "a" (val));
-
-}
-
-#define HG_Kernel_H
-#endif

@@ -36,6 +36,7 @@ char string[] =
 "help: display this help message\n"
 "sh: a simple shell\n"
 "lscpu: display cpu info\n"
+"vgatest: test graphics mode\n"
 "-----------------------------------\n";
 
 void main() {

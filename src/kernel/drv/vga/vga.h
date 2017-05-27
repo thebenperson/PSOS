@@ -56,7 +56,7 @@ extern void kputn(word num, bool hex);
 extern void kputs(mem16_t string);
 extern void ksetCursor(bool enabled);
 extern word ksetPosition(word position);
-extern void ksetVGAMode(byte mode);
+extern bool ksetVGAMode(word width, word height, bool graphical);
 
 #define HG_Kernel_VGA_H
 #endif

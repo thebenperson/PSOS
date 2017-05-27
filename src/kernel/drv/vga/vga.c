@@ -30,6 +30,7 @@ SOFTWARE.
 #include "types.h"
 #include "vga.h"
 
+word modes[2]; //far pointer
 byte vAttr = BG_GREEN;
 word vPort;
 word vOffset = 0;
@@ -38,15 +39,42 @@ void scroll();
 
 void initVGA() {
 
-	ksetVGAMode(3);
-	kclearText();
-	ksetCursor(false);
-
 	word tvPort;
 
 	asm("mov es, %0" :: "a" (0));
 	asm("mov %0, es:[0x463]" : "=g" (tvPort)); //address 0x0:0x463 in BDA is base VGA vPort
 	vPort  = tvPort;
+
+	struct __attribute__((packed)) {
+
+		char signature[4];
+		word version;
+		word oemString[2]; //far pointer
+		byte caps[4];
+		word modes[2]; //far pointer
+		word mem;
+		byte reserved[236];
+
+	} vbeInfo;
+
+	word result;
+
+	asm("mov ax, ds");
+	asm("mov es, ax");
+	asm("int 0x10"
+		: "=a" (result)
+		: "a" (0x4F00), "D" (&vbeInfo));
+
+	if (result == 0x4F) {
+
+		modes[0] = vbeInfo.modes[0];
+		modes[1] = vbeInfo.modes[1];
+
+	} else modes[0] = 0xFFFF;
+
+	ksetVGAMode(0xFFFF, 0xFFFF, false);
+	kclearText();
+	ksetCursor(false);
 
 }
 
@@ -94,49 +122,35 @@ void kputc(char c) {
 
 void kputn(word num, bool hex) {
 
-	bool tSyscalled = syscalled;
-
-	syscalled = false;
-	if (hex) kputs("0x");
-	syscalled = tSyscalled;
-
 	byte base = hex ? 16 : 10;
-	byte nCarry = 0;
-	byte place = 0;
+	word tNum = num;
 
-	while (num) {
+	byte place = 1;
+	while (tNum >= base) {
 
-		bool carry;
-		place = 0;
-		int rem = num;
-
-		while (rem >= base) {
-
-			carry = !(rem % base);
-
-			if (carry) nCarry++;
-			else nCarry = 0;
-
-			rem /= base;
-			place++;
-
-		}
-
-		if ((hex) && (rem >= 10)) kputc(rem + 0x37);
-		else kputc(rem + 0x30);
-
-		if (carry) {
-
-			for (byte i = 0; i < nCarry; i++)
-				kputc('0');
-
-			nCarry = 0;
-
-		} else nCarry++;
-
-		num -= (rem * pow(10, place));
+		tNum /= base;
+		place++;
 
 	}
+
+	char string[place + 1];
+	string[place] = '\0';
+
+	for (byte i = 0; i < place; i++) {
+
+		byte value = (num % base) + 0x30;
+		if (value > 0x39) value += 0x7;
+
+		string[place - i - 1] = value;
+		num /= base;
+
+	}
+
+	bool tSyscalled = syscalled;
+	syscalled = false;
+	if (hex) kputs("0x");
+	kputs(string);
+	syscalled = tSyscalled;
 
 }
 
@@ -207,9 +221,135 @@ word ksetPosition(word position) {
 
 }
 
-void ksetVGAMode(byte mode) {
+bool ksetVGAMode(word width, word height, bool graphical) {
 
-	asm("int 0x10" :: "a" (mode));
+	if (modes[0] == 0xFFFF) return false;
+
+	word bestWidth = 0;
+	word bestHeight = 0;
+
+	word bestCharWidth = 0;
+	word bestCharHeight = 0;
+
+	word bestWidthMode = NULL;
+	word bestHeightMode = NULL;
+
+	word bestCharWidthMode = NULL;
+	word bestCharHeightMode = NULL;
+	word mode;
+
+	for (;;) {
+
+		asm("mov es, %0" :: "a" (modes[1]));
+		asm("mov %0, es:[%1]"
+			: "=g" (mode)
+			: "b" (modes[0]++));
+
+		if (mode == 0xFFFF) return false;
+
+		struct __attribute__((packed)) {
+
+			word attributes;
+			byte winA;
+			byte winB;
+			word granularity;
+			word winsize;
+			word segmentA;
+			word segmentB;
+			word realFctPtr[2]; //far pointer
+			word pitch;
+
+			word width;
+			word height;
+			byte charWidth;
+			byte charHeight;
+			byte planes;
+			byte bpp;
+			byte banks;
+			byte memory_model;
+			byte bank_size;
+			byte image_pages;
+			byte reserved0;
+
+			byte red_mask;
+			byte red_position;
+			byte green_mask;
+			byte green_position;
+			byte blue_mask;
+			byte blue_position;
+			byte rsv_mask;
+			byte rsv_position;
+			byte directcolor_attributes;
+
+			dword physbase;
+			byte reserved[217];
+
+		} modeInfo;
+
+		asm("mov ax, ds");
+		asm("mov es, ax");
+
+		word result;
+
+		asm("int 0x10"
+			: "=a" (result)
+			: "a" (0x4F01), "c" (mode), "D" (&modeInfo));
+
+		if (result != 0x4F) continue;
+
+		if ((modeInfo.attributes & 0x10) != graphical) continue;
+
+		if ((width != 0xFFFF) && (modeInfo.width != width)) continue;
+		else {
+
+			if (modeInfo.width > bestWidth) {
+
+				bestWidth = modeInfo.width;
+				bestWidthMode = mode;
+
+			} else continue;
+
+		}
+
+		if ((height != 0xFFFF) && (modeInfo.height != height)) continue;
+		else {
+
+			if (modeInfo.height > bestHeight) {
+
+				bestHeight = modeInfo.height;
+				bestHeightMode = mode;
+
+			} else continue;
+
+		}
+
+		if (!graphical) {
+
+			if (modeInfo.charWidth < bestCharWidth) {
+
+					bestCharWidth = modeInfo.charWidth;
+					bestCharWidthMode = mode;
+
+			} else continue;
+
+			if (modeInfo.charHeight < bestCharHeight) {
+
+					bestCharHeight = modeInfo.charHeight;
+					bestCharHeightMode = mode;
+
+			} else continue;
+
+		}
+
+		break;
+
+	}
+
+	if (width == 0xFFFF) mode = bestWidthMode;
+	else if (height == 0xFFFF) mode = bestHeightMode;
+
+	asm("int 0x10" :: "a" (0x4F02), "b" (mode));
+	return true;
 
 }
 

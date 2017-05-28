@@ -25,13 +25,23 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_Math
-
+#include "kernel.h"
+#include "pit.h"
 #include "types.h"
-#define M_PI 3.14159265358979323846f
 
-extern float sin(float a);
-extern word pow(word a, byte b);
+void kbeep(size_t freq, size_t dur) {
 
-#define HG_LIB_Math
-#endif
+	freq = 1193182 / freq;
+
+	byte val = inb(0x61);
+	val |= 0x3;
+
+	outb(0x43, 0xB6);
+	outb(0x42, freq & 0xFF);
+	outb(0x42, freq >> 8);
+
+	outb(0x61, val); //enable speaker
+	ksleep(dur);
+	outb(0x61, val ^ 0x3); //disable speaker
+
+}

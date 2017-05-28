@@ -30,17 +30,11 @@ all: lib
 
 lib: arch.o math.o string.o usr.o
 
-arch.o: arch/arch.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
-math.o: math/math.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
-string.o: string/string.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
-
 usr.o: usr/usr.c
 	nasm -f elf usr/usr.asm -o usr.o
 	gcc $(CF) $^ $(LF) -o usrc.o
 	ld usr.o usrc.o -melf_i386 -r -o $(BIN)/usr.o
 	rm usr.o usrc.o
+
+%.o: */%.c
+	gcc $(CF) $^ $(LF) -o $(BIN)/$@

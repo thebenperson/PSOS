@@ -44,7 +44,7 @@ void initRTC() {
 
 }
 
-void kgetTime(mem16_t time, byte mask) {
+void kgetDate(mem16_t date, byte mask) {
 
 	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
@@ -55,10 +55,10 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x9));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
 
 		REMOTE();
-		((Time*) time)->year = val;
+		((Date*) date)->year = val;
 		LOCAL();
 
 	}
@@ -68,10 +68,10 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x8));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
 
 		REMOTE();
-		((Time*) time)->month = val;
+		((Date*) date)->month = val;
 		LOCAL();
 
 	}
@@ -81,10 +81,10 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x7));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
 
 		REMOTE();
-		((Time*) time)->day = val;
+		((Date*) date)->day = val;
 		LOCAL();
 
 	}
@@ -94,10 +94,25 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x4));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		bool pm = false;
+		if (!military && (val & 0x80)) {
+
+			pm = true;
+			val ^= 0x80;
+
+		}
+
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
+
+		if (!military && pm) {
+
+			if (val == 12) val = 0;
+			else val += 12;
+
+		}
 
 		REMOTE();
-		((Time*) time)->hour = val;
+		((Date*) date)->hour = val;
 		LOCAL();
 
 	}
@@ -107,10 +122,10 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x2));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
 
 		REMOTE();
-		((Time*) time)->min = val;
+		((Date*) date)->min = val;
 		LOCAL();
 
 	}
@@ -120,10 +135,10 @@ void kgetTime(mem16_t time, byte mask) {
 		outb(0x70, (0x80 | 0x0));
 		val = inb(0x71);
 
-		if (bcd) val = ((val & 0xF0) >> 1) + ((val & 0xF0) >> 3) + (val & 0xf);
+		if (bcd) val = ((val / 16) * 10) + (val & 0xF);
 
 		REMOTE();
-		((Time*) time)->sec = val;
+		((Date*) date)->sec = val;
 		LOCAL();
 
 	}

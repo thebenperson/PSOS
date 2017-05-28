@@ -26,12 +26,24 @@ SOFTWARE.
 */
 
 #include "math.h"
+#include "types.h"
 
-int pow(int a, int b) {
+float sin(float a) {
 
-	int n = 1;
+	asm("fninit");
+	asm("fsin"
+		: "=t" (a)
+		: "0" (a));
 
-	for (int i = 0; i < b; i++)
+	return a;
+
+}
+
+word pow(word a, byte b) {
+
+	word n = 1;
+
+	for (byte i = 0; i < b; i++)
 		n *= a;
 
 	return n;

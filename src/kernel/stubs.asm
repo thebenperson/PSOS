@@ -92,8 +92,13 @@ callTable:
 
 	;rtc syscalls
 
-	extern kgetTime
-	dd kgetTime
+	extern kgetDate
+	dd kgetDate
+
+	;spkr syscalls
+
+	extern kbeep
+	dd kbeep
 
 	;vga syscalls
 

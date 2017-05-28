@@ -1,3 +1,3 @@
 #!/bin/sh
 
-qemu-system-x86_64 -fda bin/PSOS.img -enable-kvm -m 1024 $@ 2> /dev/null
+qemu-system-x86_64 -fda bin/PSOS.img -enable-kvm -rtc base=localtime -soundhw pcspk $@ 2> /dev/null

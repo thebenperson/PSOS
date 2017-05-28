@@ -64,41 +64,43 @@ KENTRY void kmain() {
 
 bool kexec(mem16_t path) {
 
-	word tCallback = callback;
-	//callback = NULL;
-
-	word tTunnel = cTunnel;
-	word tSegment = uSegment;
-
 	File file;
 
 	bool result = openFile(path, &file);
 	if (!result) return false;
 
+	word tSegment = uSegment;
 	uSegment += (((1 + kernelSize) * 512) / 16);
 
 	result = loadFile(&file, uSegment, 0);
-	if (!result) return false;
+	if (result) {
 
-	kinstallISR(0x21, uSegment, 0); //maybe there's a better way?
+		word tTunnel = cTunnel;
 
-	asm("mov ds, %0" :: "r" (uSegment));
-	asm("mov ss, %0" :: "r" (uSegment));
+		word tCallback = callback;
+		callback = NULL;
 
-	asm("pushad");
-	asm("int 0x21");
-	asm("popad");
+		kinstallISR(0x21, uSegment, 0); //maybe there's a better way?
 
-	asm("mov ds, %0" :: "r" (KERNEL_SEGMENT));
-	asm("mov ss, %0" :: "r" (KERNEL_SEGMENT));
+		asm("mov ds, %0" :: "r" (uSegment));
+		asm("mov ss, %0" :: "r" (uSegment));
+
+		asm("pushad");
+		asm("int 0x21");
+		asm("popad");
+
+		asm("mov ds, %0" :: "r" (KERNEL_SEGMENT));
+		asm("mov ss, %0" :: "r" (KERNEL_SEGMENT));
+
+		callback = tCallback;
+		cTunnel = tTunnel;
+
+		kinstallISR(0x21, tSegment, cTunnel); //reinstate tunnel
+
+	}
 
 	uSegment = tSegment;
-	cTunnel = tTunnel;
-	callback = tCallback;
-
-	kinstallISR(0x21, uSegment, cTunnel); //reinstate tunnel
-
-	return true;
+	return result;
 
 }
 

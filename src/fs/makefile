@@ -25,31 +25,11 @@ export CPATH := $(shell find ../ -type d | tr '\n' ':')
 
 BIN := ../../bin
 
-all: fs.img sh.bin help.bin clear.bin date.bin free.bin lscpu.bin vgatest.bin
+all: fs.img sh.bin help.bin beep.bin clear.bin date.bin free.bin lscpu.bin vgatest.bin
 
 fs.img: fat16.asm
 	nasm -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE) $^ -f bin -o $@
 	mv $@ $(BIN)/$@
-
-sh.bin: sh/main.c
-	gcc $(CF) $^ $(LF) -o sh.o
-	ld -melf_i386 sh.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
-
-help.bin: help/main.c
-	gcc $(CF) $^ $(LF) -o help.o
-	ld -melf_i386 help.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
-
-clear.bin: clear/main.c
-	gcc $(CF) $^ $(LF) -o help.o
-	ld -melf_i386 help.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
-
-date.bin: date/main.c
-	gcc $(CF) $^ $(LF) -o date.o
-	ld -melf_i386 date.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
 
 free.bin: free/main.c
 	gcc $(CF) $^ $(LF) -o free.o
@@ -61,7 +41,7 @@ lscpu.bin: lscpu/main.c
 	ld -melf_i386 lscpu.o $(BIN)/usr.o $(BIN)/arch.o -Tbin.ld -o $(BIN)/$@
 	rm *.o
 
-vgatest.bin: vgatest/main.c
-	gcc $(CF) $^ $(LF) -o vgatest.o
-	ld -melf_i386 vgatest.o $(BIN)/usr.o $(BIN)/arch.o -Tbin.ld -o $(BIN)/$@
+%.bin: %/main.c
+	gcc $(CF) $^ $(LF) -o %.o
+	ld -melf_i386 %.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
 	rm *.o

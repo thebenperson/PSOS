@@ -25,13 +25,11 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_Math
+#ifndef HG_Kernel_SPKR_H
 
 #include "types.h"
-#define M_PI 3.14159265358979323846f
 
-extern float sin(float a);
-extern word pow(word a, byte b);
+extern void kbeep(size_t freq, size_t dur);
 
-#define HG_LIB_Math
+#define HG_Kernel_SPKR_H
 #endif

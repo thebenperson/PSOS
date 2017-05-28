@@ -39,20 +39,20 @@ char* months[] = {
 
 void main() {
 
-	volatile Time time;
-	getTime(&time, T_ALL);
+	Date date;
+	getDate(&date, T_ALL);
 
-	puts(months[time.month - 1]);
+	puts(months[date.month - 1]);
 	putc(' ');
-	putn(time.day, false);
+	putn(date.day, false);
 	puts(", 20");
-	putn(time.year, false);
+	putn(date.year, false);
 	putc('\n');
-	putn(time.hour, false);
+	putn(date.hour, false);
 	putc(':');
-	putn(time.min, false);
+	putn(date.min, false);
 	putc(':');
-	putn(time.sec, false);
+	putn(date.sec, false);
 	putc('\n');
 
 }

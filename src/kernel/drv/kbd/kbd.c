@@ -29,9 +29,9 @@ SOFTWARE.
 #include "kernel.h"
 #include "kbd.h"
 
-word callback = NULL; //volatile to avoid optimization in kexec
-word cTunnel = NULL; //volatile to avoid optimization in kexec
-volatile bool keyState[87];
+volatile word callback = NULL; //volatile to avoid optimization in kexec
+word cTunnel = NULL;
+bool keyState[87];
 char keyMap[] = {
 
 	NULL,

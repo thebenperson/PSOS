@@ -45,18 +45,21 @@ static inline char toChar(byte key) { return syscall(4, key, 0, 0); }
 static inline void sleep(word milli) { syscall(5, milli, 0, 0); }
 
 //rtc syscalls
-static inline void getTime(mem16_t time, byte mask) { syscall(6, time, mask, 0); }
+static inline void getDate(mem16_t date, byte mask) { syscall(6, date, mask, 0); }
+
+//spkr syscalls
+static inline void beep(size_t freq, size_t dur) { syscall(7, freq, dur, 0); }
 
 //vga syscalls
-static inline void clearText() { syscall(7, 0, 0, 0); }
-static inline void putc(char c) { syscall(8, c, 0, 0); }
-static inline void putn(size_t num, bool hex) { syscall(9, num, hex, 0); }
-static inline void puts(mem16_t string) { syscall(10, string, 0, 0); }
-static inline void setCursor(bool enabled) { syscall(11, enabled, 0, 0); }
-static inline void setPosition(word pos) { syscall(12, pos, 0, 0); }
-static inline void setAttr(byte attr) { syscall(13, attr, 0, 0); }
+static inline void clearText() { syscall(8, 0, 0, 0); }
+static inline void putc(char c) { syscall(9, c, 0, 0); }
+static inline void putn(size_t num, bool hex) { syscall(10, num, hex, 0); }
+static inline void puts(mem16_t string) { syscall(11, string, 0, 0); }
+static inline void setCursor(bool enabled) { syscall(12, enabled, 0, 0); }
+static inline void setPosition(word pos) { syscall(13, pos, 0, 0); }
+static inline void setAttr(byte attr) { syscall(14, attr, 0, 0); }
 
-static inline word getPosition() { return syscall(12, 0xFFFF, 0, 0); }
+static inline word getPosition() { return syscall(13, 0xFFFF, 0, 0); } //same syscall as setPosition
 
 #define HG_LIB_SYSCALL_H
 #endif

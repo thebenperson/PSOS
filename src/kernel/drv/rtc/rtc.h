@@ -46,10 +46,10 @@ typedef struct {
 	byte min;
 	byte sec;
 
-} Time;
+} Date;
 
 extern void initRTC();
-extern void kgetTime(mem16_t time, byte mask);
+extern void kgetDate(mem16_t date, byte mask);
 
 #define HG_Kernel_RTC_H
 #endif

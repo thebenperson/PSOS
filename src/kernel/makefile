@@ -28,7 +28,7 @@ BIN := ../../bin
 
 all: kernel.bin
 
-kernel.bin: kbd.o pit.o rtc.o storage.o vga.o
+kernel.bin: kbd.o pit.o rtc.o spkr.o storage.o vga.o
 	gcc $(CF) kernel.c $(LF) -o kernelc.o
 	nasm -f elf stubs.asm
 	ld kernelc.o stubs.o $(BIN)/arch.o $(BIN)/math.o $(BIN)/string.o $^ -melf_i386 -r -o kernel.o
@@ -46,11 +46,5 @@ pit.o:
 	nasm -f elf drv/pit/pitISR.asm -o pitISR.o
 	ld -r pitc.o pitISR.o -melf_i386 -o $@
 
-rtc.o:
-	gcc $(CF) drv/rtc/rtc.c $(LF) -o rtc.o
-
-storage.o:
-	gcc $(CF) drv/storage/storage.c $(LF) -o storage.o
-
-vga.o:
-	gcc $(CF) drv/vga/vga.c $(LF) -o vga.o
+%.o: drv/*/%.c
+	gcc $(CF) $^ $(LF) -o $@

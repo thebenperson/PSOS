@@ -120,9 +120,9 @@ SOFTWARE.
 
 #include "types.h"
 
-extern word callback;
+extern volatile word callback;
 extern word cTunnel;
-extern volatile bool keyState[87];
+extern bool keyState[87];
 
 extern void initKeyboard();
 

@@ -76,6 +76,8 @@ void main() {
 
 void keyHandler(byte scanCode) {
 
+	if (scanCode & 0x80) return;
+
 	switch (scanCode) {
 
 		case VK_LEFT:

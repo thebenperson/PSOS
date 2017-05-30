@@ -50,6 +50,9 @@ static inline void getDate(mem16_t date, byte mask) { syscall(6, date, mask, 0);
 //spkr syscalls
 static inline void beep(size_t freq, size_t dur) { syscall(7, freq, dur, 0); }
 
+static inline void setSound(size_t freq) { syscall(7, freq, 0xFFFF, 0); } //same syscall as beep
+static inline void soundOff() { syscall(7, 0xFFFF, 0, 0); } //same syscall as beep
+
 //vga syscalls
 static inline void clearText() { syscall(8, 0, 0, 0); }
 static inline void putc(char c) { syscall(9, c, 0, 0); }
@@ -57,7 +60,8 @@ static inline void putn(size_t num, bool hex) { syscall(10, num, hex, 0); }
 static inline void puts(mem16_t string) { syscall(11, string, 0, 0); }
 static inline void setCursor(bool enabled) { syscall(12, enabled, 0, 0); }
 static inline void setPosition(word pos) { syscall(13, pos, 0, 0); }
-static inline void setAttr(byte attr) { syscall(14, attr, 0, 0); }
+static inline bool setVGAMode(word width, word height, bool graphical) { syscall(14, width, height, graphical); }
+static inline void setAttr(byte attr) { syscall(15, attr, 0, 0); }
 
 static inline word getPosition() { return syscall(13, 0xFFFF, 0, 0); } //same syscall as setPosition
 

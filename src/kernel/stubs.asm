@@ -120,5 +120,8 @@ callTable:
 	extern ksetPosition
 	dd ksetPosition
 
+	extern ksetVGAMode
+	dd ksetVGAMode
+
 	extern setAttr
 	dd setAttr

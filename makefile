@@ -42,7 +42,10 @@ PSOS: loader kernel fs
 	sudo mount bin/PSOS.img mnt
 	sudo mv bin/*.bin mnt/.
 	sudo umount mnt
-	#mkisofs -o bin/PSOS.iso -V PSOS-dev -hard-disk-boot -b PSOS.img bin
+	cp bin/PSOS.img bin/PSOS.tmp
+	truncate -s 2880K bin/PSOS.tmp
+	mkisofs -o bin/PSOS.iso -V PSOS-dev -b PSOS.tmp bin
+	rm bin/PSOS.tmp
 
 loader: kernel
 	make -C src/loader

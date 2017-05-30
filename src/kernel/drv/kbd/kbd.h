@@ -120,8 +120,8 @@ SOFTWARE.
 
 #include "types.h"
 
-extern volatile word callback;
-extern word cTunnel;
+extern volatile mem16_t callback; //avoiding optimization in kexec
+extern volatile mem16_t kTunnel; //avoiding optimization in kexec
 extern bool keyState[87];
 
 extern void initKeyboard();

@@ -30,6 +30,7 @@ SOFTWARE.
 char string[] =
 "          Commands:\n"
 "-----------------------------------\n"
+"beep: make annoying beeping sounds\n"
 "clear: clear the screen\n"
 "date: display current date and time\n"
 "free: display memory usage\n"

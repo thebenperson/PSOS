@@ -35,6 +35,18 @@ byte vAttr = BG_GREEN;
 word vPort;
 word vOffset = 0;
 
+struct __attribute__((packed)) {
+
+	char signature[4];
+	word version;
+	dword oemString; //far pointer
+	byte caps[4];
+	dword modes; //far pointer
+	word mem;
+	byte reserved[236];
+
+} vbeInfo;
+
 void scroll();
 
 void initVGA() {
@@ -44,18 +56,6 @@ void initVGA() {
 	asm("mov es, %0" :: "a" (0));
 	asm("mov %0, es:[0x463]" : "=g" (tvPort)); //address 0x0:0x463 in BDA is base VGA vPort
 	vPort  = tvPort;
-
-	struct __attribute__((packed)) {
-
-		char signature[4];
-		word version;
-		word oemString[2]; //far pointer
-		byte caps[4];
-		word modes[2]; //far pointer
-		word mem;
-		byte reserved[236];
-
-	} vbeInfo;
 
 	word result;
 
@@ -67,12 +67,12 @@ void initVGA() {
 
 	if (result == 0x4F) {
 
-		modes[0] = vbeInfo.modes[0];
-		modes[1] = vbeInfo.modes[1];
+		modes[0] = vbeInfo.modes & 0xFFFF;
+		modes[1] = vbeInfo.modes >> 16;
 
 	} else modes[0] = 0xFFFF;
 
-	ksetVGAMode(0xFFFF, 0xFFFF, false);
+	//ksetVGAMode(V_BEST, V_BEST, false);
 	kclearText();
 	ksetCursor(false);
 
@@ -225,17 +225,6 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 	if (modes[0] == 0xFFFF) return false;
 
-	word bestWidth = 0;
-	word bestHeight = 0;
-
-	word bestCharWidth = 0;
-	word bestCharHeight = 0;
-
-	word bestWidthMode = NULL;
-	word bestHeightMode = NULL;
-
-	word bestCharWidthMode = NULL;
-	word bestCharHeightMode = NULL;
 	word mode;
 
 	for (;;) {
@@ -282,7 +271,7 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 			byte directcolor_attributes;
 
 			dword physbase;
-			byte reserved[217];
+			byte reserved[212];
 
 		} modeInfo;
 
@@ -297,56 +286,15 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 		if (result != 0x4F) continue;
 
-		if ((modeInfo.attributes & 0x10) != graphical) continue;
+		//if (graphical && (modeInfo.attributes & 0x80)) continue;
+		if (!(modeInfo.attributes & 0x10) == graphical) continue;
 
-		if ((width != 0xFFFF) && (modeInfo.width != width)) continue;
-		else {
-
-			if (modeInfo.width > bestWidth) {
-
-				bestWidth = modeInfo.width;
-				bestWidthMode = mode;
-
-			} else continue;
-
-		}
-
-		if ((height != 0xFFFF) && (modeInfo.height != height)) continue;
-		else {
-
-			if (modeInfo.height > bestHeight) {
-
-				bestHeight = modeInfo.height;
-				bestHeightMode = mode;
-
-			} else continue;
-
-		}
-
-		if (!graphical) {
-
-			if (modeInfo.charWidth < bestCharWidth) {
-
-					bestCharWidth = modeInfo.charWidth;
-					bestCharWidthMode = mode;
-
-			} else continue;
-
-			if (modeInfo.charHeight < bestCharHeight) {
-
-					bestCharHeight = modeInfo.charHeight;
-					bestCharHeightMode = mode;
-
-			} else continue;
-
-		}
+		if (modeInfo.width != width) continue;
+		if (modeInfo.height != height) continue;
 
 		break;
 
 	}
-
-	if (width == 0xFFFF) mode = bestWidthMode;
-	else if (height == 0xFFFF) mode = bestHeightMode;
 
 	asm("int 0x10" :: "a" (0x4F02), "b" (mode));
 	return true;

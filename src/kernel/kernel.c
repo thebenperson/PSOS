@@ -75,7 +75,7 @@ bool kexec(mem16_t path) {
 	result = loadFile(&file, uSegment, 0);
 	if (result) {
 
-		word tTunnel = cTunnel;
+		word tTunnel = kTunnel;
 
 		word tCallback = callback;
 		callback = NULL;
@@ -92,10 +92,9 @@ bool kexec(mem16_t path) {
 		asm("mov ds, %0" :: "r" (KERNEL_SEGMENT));
 		asm("mov ss, %0" :: "r" (KERNEL_SEGMENT));
 
+		kTunnel = tTunnel;
+		kinstallISR(0x21, tSegment, kTunnel); //reinstate kTunnel
 		callback = tCallback;
-		cTunnel = tTunnel;
-
-		kinstallISR(0x21, tSegment, cTunnel); //reinstate tunnel
 
 	}
 

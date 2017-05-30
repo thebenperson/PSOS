@@ -31,17 +31,25 @@ SOFTWARE.
 
 void kbeep(size_t freq, size_t dur) {
 
-	freq = 1193182 / freq;
-
 	byte val = inb(0x61);
 	val |= 0x3;
 
-	outb(0x43, 0xB6);
-	outb(0x42, freq & 0xFF);
-	outb(0x42, freq >> 8);
+	if (freq != 0xFFFF) {
 
-	outb(0x61, val); //enable speaker
-	ksleep(dur);
+		freq = 1193182 / freq;
+
+		outb(0x43, 0xB6);
+		outb(0x42, freq & 0xFF);
+		outb(0x42, freq >> 8);
+
+		outb(0x61, val); //enable speaker
+
+		if (dur == 0xFFFF) return;
+
+		ksleep(dur);
+
+	}
+
 	outb(0x61, val ^ 0x3); //disable speaker
 
 }

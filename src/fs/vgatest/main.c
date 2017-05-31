@@ -31,19 +31,7 @@ SOFTWARE.
 
 void main() {
 
-	setVGAMode(640, 480, true);
-
-	asm("mov es, %0" :: "a" (0xA000));
-
-	dword val = 0;
-	for (dword i = 0; i < 0xFFFFFFFF; i += 3) {
-
-		asm("mov es:[%0], %1" :: "b" (i), "a" ((byte) 127));
-		asm("mov es:[%0], %1" :: "b" (i + 1), "a" ((byte) 127));
-		asm("mov es:[%0], %1" :: "b" (i + 2), "a" ((byte) 0x30));
-
-		val++;
-
-	}
+	bool result = setVGAMode(640, 480, true);
+	if (!result) return;
 
 }

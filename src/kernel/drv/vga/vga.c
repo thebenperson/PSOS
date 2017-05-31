@@ -30,7 +30,7 @@ SOFTWARE.
 #include "types.h"
 #include "vga.h"
 
-word modes[2]; //far pointer
+word *modes = NULL;
 byte vAttr = BG_GREEN;
 word vPort;
 word vOffset = 0;
@@ -48,6 +48,7 @@ struct __attribute__((packed)) {
 } vbeInfo;
 
 void scroll();
+void setBank(word bank);
 
 void initVGA() {
 
@@ -65,14 +66,8 @@ void initVGA() {
 		: "=a" (result)
 		: "a" (0x4F00), "D" (&vbeInfo));
 
-	if (result == 0x4F) {
+	if (result == 0x4F) modes = vbeInfo.modes & 0xFFFF;
 
-		modes[0] = vbeInfo.modes & 0xFFFF;
-		modes[1] = vbeInfo.modes >> 16;
-
-	} else modes[0] = 0xFFFF;
-
-	//ksetVGAMode(V_BEST, V_BEST, false);
 	kclearText();
 	ksetCursor(false);
 
@@ -223,17 +218,17 @@ word ksetPosition(word position) {
 
 bool ksetVGAMode(word width, word height, bool graphical) {
 
-	if (modes[0] == 0xFFFF) return false;
+	if (!modes) return false;
 
 	word mode;
+	byte i = 0;
+
+	asm("mov ax, ds");
+	asm("mov es, ax");
 
 	for (;;) {
 
-		asm("mov es, %0" :: "a" (modes[1]));
-		asm("mov %0, es:[%1]"
-			: "=g" (mode)
-			: "b" (modes[0]++));
-
+		mode = modes[i++];
 		if (mode == 0xFFFF) return false;
 
 		struct __attribute__((packed)) {
@@ -245,7 +240,7 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 			word winsize;
 			word segmentA;
 			word segmentB;
-			word realFctPtr[2]; //far pointer
+			dword realFctPtr; //far pointer
 			word pitch;
 
 			word width;
@@ -275,9 +270,6 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 		} modeInfo;
 
-		asm("mov ax, ds");
-		asm("mov es, ax");
-
 		word result;
 
 		asm("int 0x10"
@@ -286,8 +278,9 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 		if (result != 0x4F) continue;
 
-		//if (graphical && (modeInfo.attributes & 0x80)) continue;
+		//if (graphical && (modeInfo.attributes & 0x80)) continue; //no linear frame buffer
 		if (!(modeInfo.attributes & 0x10) == graphical) continue;
+		if (modeInfo.bpp != 24) continue;
 
 		if (modeInfo.width != width) continue;
 		if (modeInfo.height != height) continue;
@@ -296,8 +289,29 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 	}
 
-	asm("int 0x10" :: "a" (0x4F02), "b" (mode));
-	return true;
+	word result;
+
+	asm("int 0x10"
+		: "=a" (result)
+		: "a" (0x4F02), "b" (mode));
+
+	asm("mov es, %0" :: "a" (0xA000));
+
+	for (byte i = 0; i < 15; i++) {
+
+		setBank(i);
+
+		for (word j = 0; j < 0xFFFF; j += 3) {
+
+			asm("mov es:[%0], %1" :: "b" (j), "a" ((byte) j & 0xFF));
+			asm("mov es:[%0], %1" :: "b" (j + 1), "a" ((byte) 0));
+			asm("mov es:[%0], %1" :: "b" (j + 2), "a" ((byte) 0));
+
+		}
+
+	}
+
+	return (result == 0x4F);
 
 }
 
@@ -320,5 +334,11 @@ void scroll() {
 void setAttr(byte attr) {
 
 	vAttr = attr;
+
+}
+
+void setBank(word bank) {
+
+	asm("int 0x10" :: "a" (0x4F05), "b" ((word) 0), "d" (bank));
 
 }

@@ -21,37 +21,64 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-#FAT16 options
-export CLUSTERS := 4085
-export ENTRIES := 256
-export FAT_SIZE := $(shell let "FAT_SIZE = ($(CLUSTERS) + 256 - 1) / 256"; echo $$FAT_SIZE)
-#Kernel options
-export KERNEL_SEGMENT := 0x7E0
-#Compile flags
-export CF := -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -m16
-export LF := -c -ffreestanding -Os
+#filesystem options
+CLUSTERS := 4085
+ENTRIES := 256
+FAT_SIZE := $(shell let "FAT_SIZE = ($(CLUSTERS) + 256 - 1) / 256"; echo $$FAT_SIZE)
 
-all: PSOS
+#kernel options
+KERNEL_SEGMENT := 0x7E0
+DRIVERS := kbd.o pit.o rtc.o spkr.o storage.o vga.o
+LIBS := arch.o math.o string.o
 
-lib:
-	make -C src/lib
+#flags
+export CPATH := $(shell find src -type d | tr '\n' ':')
+DEF := -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
+CF := $(DEF) -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -march=i386 -m16
+LF := -c -ffreestanding -Os
 
-PSOS: loader kernel fs
-	cat bin/loader.bin bin/kernel.bin bin/fs.img > bin/$@.img
-	rm bin/*.o bin/loader.bin bin/kernel.bin bin/fs.img
-	sudo mount bin/PSOS.img mnt
-	sudo mv bin/*.bin mnt/.
+#build directories
+ROOT := bin
+OBJ := $(ROOT)/obj
+FS := $(ROOT)/fs
+IMG := $(ROOT)/img
+ISO := $(ROOT)/iso
+
+#default targets
+all: $(addprefix $(ROOT)/, PSOS.img PSOS.iso)
+
+$(ROOT)/PSOS.img: $(addprefix $(IMG)/, loader.img kernel.img fs.img)
+	cat $^ > $@
+	sudo mount $@ mnt
+	sudo cp $(FS)/* mnt/. > /dev/null
 	sudo umount mnt
-	cp bin/PSOS.img bin/PSOS.tmp
-	truncate -s 2880K bin/PSOS.tmp
-	mkisofs -o bin/PSOS.iso -V PSOS-dev -b PSOS.tmp bin
-	rm bin/PSOS.tmp
+	cp $@ $(ISO)/.
 
-loader: kernel
-	make -C src/loader
+$(ROOT)/PSOS.iso: $(ROOT)/PSOS.img
+	truncate -s 2880K $(ISO)/PSOS.img
+	mkisofs -o $@ -V PSOS-dev -b PSOS.img $(ISO)
 
-kernel: lib
-	make -C src/kernel
+include src/loader/makefile
+include src/kernel/makefile
+include src/fs/makefile
+include src/lib/makefile
 
-fs: lib
-	make -C src/fs
+#aliases for explicit targets
+%.o: $(OBJ)/%.o
+	#made $@
+
+%.bin: $(FS)/%.bin
+	#made $@
+
+PSOS.img: $(ROOT)/PSOS.img
+	#made $@
+
+%.img: $(IMG)/%.img
+	#made $@
+
+%.iso: $(ROOT)/%.iso
+	#made $@
+
+.PHONY: clean
+clean:
+	-rm $(OBJ)/* $(FS)/* $(IMG)/* $(ROOT)/* 2> /dev/null

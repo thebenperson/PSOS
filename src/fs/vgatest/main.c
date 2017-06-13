@@ -25,7 +25,6 @@ SOFTWARE.
 
 */
 
-#include "types.h"
 #include "usr.h"
 #include "vga.h"
 
@@ -33,5 +32,29 @@ void main() {
 
 	bool result = setVGAMode(640, 480, true);
 	if (!result) return;
+
+	Line line = { 0, 0, 640, 480};
+	draw(&line);
+
+	line.x1 = 0;
+	line.y1 = 480;
+
+	line.x2 = 640;
+	line.y2 = 0;
+	draw(&line);
+
+	line.x1 = 320;
+	line.y1 = 0;
+
+	line.x2 = 320;
+	line.y2 = 480;
+	draw(&line);
+
+	line.x1 = 0;
+	line.y1 = 240;
+
+	line.x2 = 640;
+	line.y2 = 240;
+	draw(&line);
 
 }

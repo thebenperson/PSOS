@@ -29,9 +29,9 @@ SOFTWARE.
 #include "types.h"
 #include "usr.h"
 
-void keyHandler(byte scanCode);
+void keyHandler(uint8_t scanCode);
 
-byte i = 0;
+uint8_t i = 0;
 char buffer[13];
 
 void main() {
@@ -74,7 +74,7 @@ void main() {
 
 }
 
-void keyHandler(byte scanCode) {
+void keyHandler(uint8_t scanCode) {
 
 	if (scanCode & 0x80) return;
 
@@ -107,7 +107,7 @@ void keyHandler(byte scanCode) {
 			if (i) {
 
 				buffer[i--] = '\0';
-				word position = getPosition() - 2;
+				uint16_t position = getPosition() - 2;
 				setPosition(position);
 				putc('\0');
 				setPosition(position);

@@ -25,12 +25,12 @@ SOFTWARE.
 
 */
 
-#include "types.h"
 #include "kernel.h"
 #include "kbd.h"
+#include "types.h"
 
-volatile mem16_t callback = NULL; //avoiding optimization in kexec
-volatile mem16_t kTunnel = NULL; //avoiding optimization in kexec
+volatile uint16_t callback = NULL; //avoiding optimization in kexec
+volatile uint16_t kTunnel = NULL; //avoiding optimization in kexec
 bool keyState[87];
 char keyMap[] = {
 
@@ -79,12 +79,12 @@ void initKBD() {
 
 void kbdHandler() {
 
-	byte scanCode = inb(0x60);
+	uint8_t scanCode = inb(0x60);
 	if (scanCode > 0xD8) return;
 
 	bool state = !(scanCode & 0x80);
 
-	byte val = scanCode & 0x7F;
+	uint8_t val = scanCode & 0x7F;
 	val--;
 
 	keyState[val] = state;
@@ -92,17 +92,17 @@ void kbdHandler() {
 	if (!state) val |= 0x80;
 
 	if (callback)
-		asm("int 0x21" :: "b" ((dword) callback), "a" ((dword) val));
+		asm("int 0x21" :: "b" ((uint32_t) callback), "a" ((uint32_t) val));
 
 }
 
-bool kgetKey(byte key) {
+bool kgetKey(uint8_t key) {
 
 	return keyState[key];
 
 }
 
-void ksetCallback(mem16_t tunnel, mem16_t offset) {
+void ksetCallback(uint16_t tunnel, uint16_t offset) {
 
 	kTunnel = tunnel;
 	callback = offset;
@@ -111,7 +111,7 @@ void ksetCallback(mem16_t tunnel, mem16_t offset) {
 
 }
 
-char ktoChar(byte scanCode) {
+char ktoChar(uint8_t scanCode) {
 
 	if (keyState[VK_LSHIFT] || keyState[VK_RSHIFT]) scanCode += 85;
 	return keyMap[scanCode];

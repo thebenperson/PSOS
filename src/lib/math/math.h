@@ -25,13 +25,16 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_Math
+#ifndef HG_LIB_MATH
 
 #include "types.h"
+
 #define M_PI 3.14159265358979323846f
 
+extern int abs(int a);
 extern float sin(float a);
-extern word pow(word a, byte b);
+extern float sqrt(float a);
+extern float pow(float a, uint8_t b);
 
-#define HG_LIB_Math
+#define HG_LIB_MATH
 #endif

@@ -21,20 +21,11 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-export CPATH := $(shell find ../ -type d | tr '\n' ':')
-
-CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT)
-BIN := ../../bin
-
-all: lib
-
-lib: arch.o math.o string.o usr.o
-
-usr.o: usr/usr.c
-	nasm -f elf usr/usr.asm -o usr.o
-	gcc $(CF) $^ $(LF) -o usrc.o
-	ld usr.o usrc.o -melf_i386 -r -o $(BIN)/usr.o
+$(OBJ)/usr.o:
+	nasm -f elf src/lib/usr/usr.asm -o usr.o
+	gcc $(CF) src/lib/usr/usr.c $(LF) -o usrc.o
+	ld usr.o usrc.o -melf_i386 -r -o $(OBJ)/usr.o
 	rm usr.o usrc.o
 
-%.o: */%.c
-	gcc $(CF) $^ $(LF) -o $(BIN)/$@
+$(OBJ)/%.o: src/lib/*/%.c
+	gcc $(CF) $^ $(LF) -o $@

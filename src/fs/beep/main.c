@@ -31,7 +31,7 @@ SOFTWARE.
 #include "types.h"
 #include "usr.h"
 
-void keyHandler(byte key);
+void keyHandler(uint8_t key);
 
 void main() {
 
@@ -41,9 +41,13 @@ void main() {
 
 }
 
-void keyHandler(byte key) {
+void keyHandler(uint8_t key) {
 
-	if (!(key & 0x80) && (key != VK_ESC)) setSound(key);
-	else soundOff();
+	if (!(key & 0x80) && (key != VK_ESC)) {
+
+		if (!getKey(key)) return;
+		setSound(key);
+
+	} else soundOff();
 
 }

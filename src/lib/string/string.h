@@ -25,12 +25,12 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_String_H
+#ifndef HG_LIB_STRING_H
 
 #include "types.h"
 
-extern bool strcmp(mem16_t str1, mem16_t str2);
-extern byte strlen(mem16_t string);
+extern bool strcmp(uint16_t str1, uint16_t str2);
+extern uint8_t strlen(uint16_t string);
 
-#define HG_LIB_String_H
+#define HG_LIB_STRING_H
 #endif

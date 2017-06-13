@@ -28,22 +28,22 @@ SOFTWARE.
 #include "string.h"
 #include "types.h"
 
-bool strcmp(mem16_t str1, mem16_t str2) {
+bool strcmp(uint16_t str1, uint16_t str2) {
 
-	byte len = strlen(str1);
+	uint8_t len = strlen(str1);
 
 	if (len != strlen(str2)) return false;
 
-	for (byte i = 0; i < len; i++)
+	for (uint8_t i = 0; i < len; i++)
 		if (((char*) str1)[i] != ((char*) str2)[i]) return false;
 
 	return true;
 
 }
 
-byte strlen(mem16_t string) {
+uint8_t strlen(uint16_t string) {
 
-	byte len = 0;
+	uint8_t len = 0;
 
 	while (((char*) string)[len++]) {}
 

@@ -25,22 +25,25 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_H
+#ifndef PSOS_KERNEL_H
 
 #include "types.h"
 
+#define KENTRY __attribute__((noreturn, section(".kmain")))
+
+#define INIT_REMOTE() uint16_t tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 #define REMOTE() asm("mov ds, %0" :: "a" (tSegment));
 #define LOCAL() asm("mov ds, %0" :: "a" (KERNEL_SEGMENT));
 
-extern byte kernelSize;
+extern uint8_t kernelSize;
 extern bool syscalled;
-extern word uSegment;
+extern uint16_t uSegment;
 
-extern void kinstallISR(byte num, mem16_t segment, mem16_t offset);
+extern void kinstallISR(uint8_t num, uint16_t segment, uint16_t offset);
 
-static inline byte inb(word port) {
+static inline uint8_t inb(uint16_t port) {
 
-	byte val;
+	uint8_t val;
 	asm("in %0, %1"
 		: "=a" (val)
 		: "d" (port));
@@ -49,11 +52,11 @@ static inline byte inb(word port) {
 
 }
 
-static inline void outb(word port, byte val) {
+static inline void outb(uint16_t port, uint8_t val) {
 
 	asm("out %0, %1" :: "Nd" (port), "a" (val));
 
 }
 
-#define HG_Kernel_H
+#define PSOS_KERNEL_H
 #endif

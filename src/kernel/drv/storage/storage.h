@@ -30,32 +30,32 @@ SOFTWARE.
 #include "types.h"
 
 extern void initStorage();
-extern bool loadFile(mem16_t file, word segment, word offset);
-extern bool loadSector(byte start, byte length, word segment, word offset);
-extern bool openFile(mem16_t path, mem16_t file);
+extern bool loadFile(uint16_t file, uint16_t segment, uint16_t offset);
+extern bool loadSector(uint8_t start, uint8_t length, uint16_t segment, uint16_t offset);
+extern bool openFile(uint16_t path, uint16_t file);
 
 typedef struct __attribute__((packed)) {
 
 	char name[11];
-	byte attribute;
-	byte reserved1;
-	byte creationSec;
-	word creationTime;
-	word creationDate;
-	word lastAccess;
-	word reserved2;
-	word modTime;
-	word modDate;
-	word cluster;
-	dword size;
+	uint8_t attribute;
+	uint8_t reserved1;
+	uint8_t creationSec;
+	uint16_t creationTime;
+	uint16_t creationDate;
+	uint16_t lastAccess;
+	uint16_t reserved2;
+	uint16_t modTime;
+	uint16_t modDate;
+	uint16_t cluster;
+	uint32_t size;
 
 } FATEntry;
 
 typedef struct {
 
-	byte attribute;
-	word cluster;
-	dword size;
+	uint8_t attribute;
+	uint16_t cluster;
+	uint32_t size;
 
 } File;
 

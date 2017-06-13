@@ -29,17 +29,17 @@ SOFTWARE.
 #include "arch.h"
 #include "types.h"
 
-void cpuid(mem16_t string) {
+void cpuid(uint16_t string) {
 
 	asm("cpuid" :
-		"=b" (((dword*) string)[0]),
-		"=d" (((dword*) string)[1]),
-		"=c" (((dword*) string)[2])
-		: "a" ((dword) 0));
+		"=b" (((uint32_t*) string)[0]),
+		"=d" (((uint32_t*) string)[1]),
+		"=c" (((uint32_t*) string)[2])
+		: "a" ((uint32_t) 0));
 
 }
 
-void getRegs(mem16_t regs) {
+void getRegs(uint16_t regs) {
 
 	asm("mov %0, ax" : "=r" (((struct regs*) regs)->ax));
 	asm("mov %0, bx" : "=r" (((struct regs*) regs)->bx));

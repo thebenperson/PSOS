@@ -25,11 +25,11 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_SPKR_H
+#ifndef PSOS_SPKR_H
 
 #include "types.h"
 
-extern void kbeep(size_t freq, size_t dur);
+extern void kbeep(uint16_t freq, uint16_t dur);
 
-#define HG_Kernel_SPKR_H
+#define PSOS_SPKR_H
 #endif

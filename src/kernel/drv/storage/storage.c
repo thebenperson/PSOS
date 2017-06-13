@@ -32,10 +32,10 @@ SOFTWARE.
 
 #define ROOT_SIZE (ENTRIES * 32) / 512
 
-byte drive;
+uint8_t drive;
 
-byte sectors;
-byte heads;
+uint8_t sectors;
+uint8_t heads;
 
 void initStorage() {
 
@@ -48,7 +48,7 @@ void initStorage() {
 		: "d" (drive)
 		: "cc", "ah", "cx", "bl", "di"); //get emulated drive geometry
 
-	word cx;
+	uint16_t cx;
 	asm("mov %0, cx" : "=a" (cx));
 	asm("mov %0, dh" : "=g" (heads));
 
@@ -57,11 +57,11 @@ void initStorage() {
 
 }
 
-bool loadSector(byte start, byte length, word segment, word offset) {
+bool loadSector(uint8_t start, uint8_t length, uint16_t segment, uint16_t offset) {
 
-	byte track = start / (heads * sectors);
-	byte head = (start / sectors) % heads;
-	byte sector = (start % sectors) + 1; //LBA to CHS conversion
+	uint8_t track = start / (heads * sectors);
+	uint8_t head = (start / sectors) % heads;
+	uint8_t sector = (start % sectors) + 1; //LBA to CHS conversion
 
 	bool result;
 
@@ -77,15 +77,15 @@ bool loadSector(byte start, byte length, word segment, word offset) {
 
 }
 
-bool loadFile(mem16_t file, word segment, word offset) {
+bool loadFile(uint16_t file, uint16_t segment, uint16_t offset) {
 
 	//load the FAT into memory
-	word fat[FAT_SIZE * (512 / 2)];
+	uint16_t fat[FAT_SIZE * (512 / 2)];
 	bool result = loadSector(1 + kernelSize, FAT_SIZE, KERNEL_SEGMENT, &fat);
 	if (!result) return false;
 
-	word base = 1 + kernelSize + FAT_SIZE + ROOT_SIZE; //offset to data area
-	word cluster = ((File*) file)->cluster;
+	uint16_t base = 1 + kernelSize + FAT_SIZE + ROOT_SIZE; //offset to data area
+	uint16_t cluster = ((File*) file)->cluster;
 
 	do {
 
@@ -101,14 +101,14 @@ bool loadFile(mem16_t file, word segment, word offset) {
 
 }
 
-bool openFile(mem16_t path, mem16_t file) {
+bool openFile(uint16_t path, uint16_t file) {
 
-	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
+	uint16_t tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
 	char tPath[12];
 	bool ext = false;
 
-	for (byte i = 0; i < 12; i++) {
+	for (uint8_t i = 0; i < 12; i++) {
 
 		REMOTE();
 		char c = ((char*) path)[i];
@@ -125,7 +125,7 @@ bool openFile(mem16_t path, mem16_t file) {
 
 	}
 
-	byte root[ROOT_SIZE * 512];
+	uint8_t root[ROOT_SIZE * 512];
 
 	bool result = loadSector(1 + kernelSize + FAT_SIZE, ROOT_SIZE, KERNEL_SEGMENT, &root);
 	if (!result) return false;
@@ -134,7 +134,7 @@ bool openFile(mem16_t path, mem16_t file) {
 
 	while (entry->name[0]) {
 
-		for (byte i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 
 			if (entry->name[i] == ' ') {
 
@@ -160,7 +160,7 @@ bool openFile(mem16_t path, mem16_t file) {
 
 		}
 
-		entry = (FATEntry*) (((mem16_t) entry) + 32);
+		entry = (FATEntry*) (((uint16_t) entry) + 32);
 
 	}
 

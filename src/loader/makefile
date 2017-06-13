@@ -21,14 +21,11 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-BIN := ../../bin
-KERNEL_SIZE := $(shell du -B 512 --apparent-size $(BIN)/kernel.bin | awk '{print $$1;}')
+$(IMG)/loader.img: $(IMG)/kernel.img $(OBJ)/loader.o
+	cp $(OBJ)/loader.o $@
 
-CF := -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DKERNEL_SIZE=$(KERNEL_SIZE) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
-LF := -f bin
-
-all: loader.bin
-
-loader.bin: loader.asm
-	nasm $(CF) $^ $(LF) -o $@
-	mv $@ $(BIN)/$@
+$(OBJ)/loader.o: src/loader/loader.asm
+	$(eval KERNEL_SIZE := $(shell du -B 512 --apparent-size $(IMG)/kernel.img | awk '{print $$1;}'))
+	$(eval TCF := $(DEF) -DKERNEL_SIZE=$(KERNEL_SIZE))
+	$(eval TLF := -f bin)
+	nasm $(TCF) $^ $(TLF) -o $@

@@ -28,7 +28,7 @@ SOFTWARE.
 #include "kernel.h"
 #include "types.h"
 
-volatile size_t time = 0;
+volatile uint16_t time = 0;
 
 extern void pitISR();
 
@@ -46,9 +46,9 @@ void initPIT() {
 
 }
 
-void ksleep(size_t mili) {
+void ksleep(uint16_t mili) {
 
-	size_t lastTime = time;
+	uint16_t lastTime = time;
 
 	while ((time - lastTime) < mili)
 		asm("hlt");

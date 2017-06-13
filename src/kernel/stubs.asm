@@ -105,6 +105,9 @@ callTable:
 	extern kclearText
 	dd kclearText
 
+	extern kdraw
+	dd kdraw
+
 	extern kputc
 	dd kputc
 

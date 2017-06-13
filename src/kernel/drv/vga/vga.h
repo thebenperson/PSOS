@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_VGA_H
+#ifndef PSOS_VGA_H
 
 #include "types.h"
 
@@ -48,15 +48,24 @@ SOFTWARE.
 #define FG_WHITE 0x7
 #define FG_YELLOW 0x6
 
-extern byte vAttr;
+typedef struct {
+
+	uint16_t x1;
+	uint16_t y1;
+	uint16_t x2;
+	uint16_t y2;
+
+} Line;
+
+extern uint8_t vAttr;
 
 extern void kclearText();
 extern void initVGA();
-extern void kputn(word num, bool hex);
-extern void kputs(mem16_t string);
+extern void kputn(uint16_t num, bool hex);
+extern void kputs(uint16_t string);
 extern void ksetCursor(bool enabled);
-extern word ksetPosition(word position);
-extern bool ksetVGAMode(word width, word height, bool graphical);
+extern uint16_t ksetPosition(uint16_t position);
+extern bool ksetVGAMode(uint16_t width, uint16_t height, bool graphical);
 
-#define HG_Kernel_VGA_H
+#define PSOS_VGA_H
 #endif

@@ -30,16 +30,9 @@ SOFTWARE.
 #include <stdbool.h>
 #include <stdint.h>
 
-#define HANG() asm("cli"); asm("hlt");
-#define KENTRY __attribute__((noreturn, section(".kmain")))
 #define NULL 0
-
-typedef uint8_t byte;
-typedef uint16_t word;
-typedef uint32_t dword;
-
-typedef uint16_t mem16_t;
-typedef uint16_t size_t;
+#define NORET __attribute__((noreturn))
+#define HANG() asm("cli"); asm("hlt");
 
 #define HG_Types_H
 #endif

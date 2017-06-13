@@ -30,35 +30,35 @@ SOFTWARE.
 #include "types.h"
 #include "vga.h"
 
-word *modes = NULL;
-byte vAttr = BG_GREEN;
-word vPort;
-word vOffset = 0;
+uint16_t *modes = NULL;
+uint8_t vAttr = BG_GREEN;
+uint16_t vPort;
+uint16_t vOffset = 0;
 
 struct __attribute__((packed)) {
 
 	char signature[4];
-	word version;
-	dword oemString; //far pointer
-	byte caps[4];
-	dword modes; //far pointer
-	word mem;
-	byte reserved[236];
+	uint16_t version;
+	uint32_t oemString; //far pointer
+	uint8_t caps[4];
+	uint32_t modes; //far pointer
+	uint16_t mem;
+	uint8_t reserved[236];
 
 } vbeInfo;
 
 void scroll();
-void setBank(word bank);
+void setBank(uint16_t bank);
 
 void initVGA() {
 
-	word tvPort;
+	uint16_t tvPort;
 
 	asm("mov es, %0" :: "a" (0));
 	asm("mov %0, es:[0x463]" : "=g" (tvPort)); //address 0x0:0x463 in BDA is base VGA vPort
 	vPort  = tvPort;
 
-	word result;
+	uint16_t result;
 
 	asm("mov ax, ds");
 	asm("mov es, ax");
@@ -77,13 +77,63 @@ void kclearText() {
 
 	asm("mov es, %0" :: "r" (0xB800));
 
-	for (word i = 0; i < (80 * 25 * 2); i += 2) {
+	for (uint16_t i = 0; i < (80 * 25 * 2); i += 2) {
 
 		asm("movw es:[%0], %1" :: "b" (i), "g" (vAttr << 8));
 
 	}
 
 	vOffset = 0;
+
+}
+
+void kdraw(uint16_t shape) {
+
+	INIT_REMOTE();
+
+	REMOTE();
+	volatile uint16_t x1 = ((Line*) shape)->x1;
+	volatile uint16_t y1 = 480 - ((Line*) shape)->y1;
+
+	volatile uint16_t x2 = ((Line*) shape)->x2;
+	volatile uint16_t y2 = 480 - ((Line*) shape)->y2;
+	LOCAL();
+
+	asm("fninit");
+
+	float dX = x2 - x1;
+	float dY = y2 - y1;
+
+	float len = sqrt(pow(dX, 2) + pow(dY, 2));
+	float cX = dX / len;
+	float cY = dY / len;
+
+	asm("mov es, %0" :: "a" (0xA000));
+
+	uint8_t lastBank = 0;
+	for (uint16_t i = 0; i < len; i++) {
+
+		uint16_t x = (i * cX) + x1;
+		uint16_t y = (i * cY) + y1;
+
+		int offset = ((y * 640) + x) * 3;
+
+		uint8_t bank = offset / (1024 * 64);
+		offset %= (1024 * 64);
+
+		if (bank != lastBank) {
+
+			setBank(bank);
+			lastBank = bank;
+
+		}
+
+		asm("mov es:[%0], %1" :: "b" (offset), "a" ((uint8_t) 0x55));
+		asm("mov es:[%0], %1" :: "b" (offset + 1), "a" (i));
+
+	}
+
+	setBank(0);
 
 }
 
@@ -115,12 +165,12 @@ void kputc(char c) {
 
 }
 
-void kputn(word num, bool hex) {
+void kputn(uint16_t num, bool hex) {
 
-	byte base = hex ? 16 : 10;
-	word tNum = num;
+	uint8_t base = hex ? 16 : 10;
+	uint16_t tNum = num;
 
-	byte place = 1;
+	uint8_t place = 1;
 	while (tNum >= base) {
 
 		tNum /= base;
@@ -131,9 +181,9 @@ void kputn(word num, bool hex) {
 	char string[place + 1];
 	string[place] = '\0';
 
-	for (byte i = 0; i < place; i++) {
+	for (uint8_t i = 0; i < place; i++) {
 
-		byte value = (num % base) + 0x30;
+		uint8_t value = (num % base) + 0x30;
 		if (value > 0x39) value += 0x7;
 
 		string[place - i - 1] = value;
@@ -149,9 +199,9 @@ void kputn(word num, bool hex) {
 
 }
 
-void kputs(mem16_t string) {
+void kputs(uint16_t string) {
 
-	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
+	INIT_REMOTE();
 
 	asm("mov es, %0" :: "r" (0xB800));
 
@@ -196,11 +246,11 @@ void kputs(mem16_t string) {
 
 void ksetCursor(bool enabled) {
 
-	asm("int 0x10" :: "a" (1 << 8), "c" ((word) (enabled ? 0x7 : 0x700)));
+	asm("int 0x10" :: "a" (1 << 8), "c" ((uint16_t) (enabled ? 0x7 : 0x700)));
 
 }
 
-word ksetPosition(word position) {
+uint16_t ksetPosition(uint16_t position) {
 
 	if (position == 0xFFFF) return vOffset;
 
@@ -216,12 +266,12 @@ word ksetPosition(word position) {
 
 }
 
-bool ksetVGAMode(word width, word height, bool graphical) {
+bool ksetVGAMode(uint16_t width, uint16_t height, bool graphical) {
 
 	if (!modes) return false;
 
-	word mode;
-	byte i = 0;
+	uint16_t mode;
+	uint8_t i = 0;
 
 	asm("mov ax, ds");
 	asm("mov es, ax");
@@ -233,44 +283,44 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 		struct __attribute__((packed)) {
 
-			word attributes;
-			byte winA;
-			byte winB;
-			word granularity;
-			word winsize;
-			word segmentA;
-			word segmentB;
-			dword realFctPtr; //far pointer
-			word pitch;
+			uint16_t attributes;
+			uint8_t winA;
+			uint8_t winB;
+			uint16_t granularity;
+			uint16_t winsize;
+			uint16_t segmentA;
+			uint16_t segmentB;
+			uint32_t realFctPtr; //far pointer
+			uint16_t pitch;
 
-			word width;
-			word height;
-			byte charWidth;
-			byte charHeight;
-			byte planes;
-			byte bpp;
-			byte banks;
-			byte memory_model;
-			byte bank_size;
-			byte image_pages;
-			byte reserved0;
+			uint16_t width;
+			uint16_t height;
+			uint8_t charWidth;
+			uint8_t charHeight;
+			uint8_t planes;
+			uint8_t bpp;
+			uint8_t banks;
+			uint8_t memory_model;
+			uint8_t bank_size;
+			uint8_t image_pages;
+			uint8_t reserved0;
 
-			byte red_mask;
-			byte red_position;
-			byte green_mask;
-			byte green_position;
-			byte blue_mask;
-			byte blue_position;
-			byte rsv_mask;
-			byte rsv_position;
-			byte directcolor_attributes;
+			uint8_t red_mask;
+			uint8_t red_position;
+			uint8_t green_mask;
+			uint8_t green_position;
+			uint8_t blue_mask;
+			uint8_t blue_position;
+			uint8_t rsv_mask;
+			uint8_t rsv_position;
+			uint8_t directcolor_attributes;
 
-			dword physbase;
-			byte reserved[212];
+			uint32_t physbase;
+			uint8_t reserved[212];
 
 		} modeInfo;
 
-		word result;
+		uint16_t result;
 
 		asm("int 0x10"
 			: "=a" (result)
@@ -289,27 +339,11 @@ bool ksetVGAMode(word width, word height, bool graphical) {
 
 	}
 
-	word result;
+	uint16_t result;
 
 	asm("int 0x10"
 		: "=a" (result)
 		: "a" (0x4F02), "b" (mode));
-
-	asm("mov es, %0" :: "a" (0xA000));
-
-	for (byte i = 0; i < 15; i++) {
-
-		setBank(i);
-
-		for (word j = 0; j < 0xFFFF; j += 3) {
-
-			asm("mov es:[%0], %1" :: "b" (j), "a" ((byte) j & 0xFF));
-			asm("mov es:[%0], %1" :: "b" (j + 1), "a" ((byte) 0));
-			asm("mov es:[%0], %1" :: "b" (j + 2), "a" ((byte) 0));
-
-		}
-
-	}
 
 	return (result == 0x4F);
 
@@ -319,26 +353,26 @@ void scroll() {
 
 	asm("mov es, %0" :: "r" (0xB800));
 
-	for (size_t i = 0; i < (80 * 24 * 2); i += 2) {
+	for (uint16_t i = 0; i < (80 * 24 * 2); i += 2) {
 
 		asm("movw ax, es:[%0 + 160]" :: "b" (i));
 		asm("movw es:[bx], ax");
 
 	}
 
-	for (size_t i = (80 * 24 * 2); i < (80 * 25 * 2); i += 2)
+	for (uint16_t i = (80 * 24 * 2); i < (80 * 25 * 2); i += 2)
 		asm("mov es:[%0], %1" :: "b" (i), "a" (vAttr << 8));
 
 }
 
-void setAttr(byte attr) {
+void setAttr(uint8_t attr) {
 
 	vAttr = attr;
 
 }
 
-void setBank(word bank) {
+void setBank(uint16_t bank) {
 
-	asm("int 0x10" :: "a" (0x4F05), "b" ((word) 0), "d" (bank));
+	asm("int 0x10" :: "a" (0x4F05), "b" ((uint16_t) 0), "d" (bank));
 
 }

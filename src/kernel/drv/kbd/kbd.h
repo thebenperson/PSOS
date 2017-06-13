@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_Keyboard_H
+#ifndef PSOS_KBD_H
 
 #define VK_ESC 0x0
 #define VK_1 0x1
@@ -120,11 +120,11 @@ SOFTWARE.
 
 #include "types.h"
 
-extern volatile mem16_t callback; //avoiding optimization in kexec
-extern volatile mem16_t kTunnel; //avoiding optimization in kexec
+extern volatile uint16_t callback; //avoiding optimization in kexec
+extern volatile uint16_t kTunnel; //avoiding optimization in kexec
 extern bool keyState[87];
 
-extern void initKeyboard();
+extern void initKBD();
 
-#define HG_Kernel_Keyboard_H
+#define PSOS_KBD_H
 #endif

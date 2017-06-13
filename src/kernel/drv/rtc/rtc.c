@@ -34,7 +34,7 @@ bool military;
 
 void initRTC() {
 
-	byte val;
+	uint8_t val;
 
 	outb(0x70, (0x80 | 0xB));
 	val = inb(0x71);
@@ -44,11 +44,11 @@ void initRTC() {
 
 }
 
-void kgetDate(mem16_t date, byte mask) {
+void kgetDate(uint16_t date, uint8_t mask) {
 
-	word tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
+	uint16_t tSegment = syscalled ? uSegment : KERNEL_SEGMENT;
 
-	byte val;
+	uint8_t val;
 
 	if (mask & T_YEAR) {
 

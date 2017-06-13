@@ -25,7 +25,7 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_RTC_H
+#ifndef PSOS_RTC_H
 
 #include "types.h"
 
@@ -39,17 +39,17 @@ SOFTWARE.
 
 typedef struct {
 
-	byte year;
-	byte month;
-	byte day;
-	byte hour;
-	byte min;
-	byte sec;
+	uint8_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;
 
 } Date;
 
 extern void initRTC();
-extern void kgetDate(mem16_t date, byte mask);
+extern void kgetDate(uint16_t date, uint8_t mask);
 
-#define HG_Kernel_RTC_H
+#define PSOS_RTC_H
 #endif

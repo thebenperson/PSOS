@@ -25,32 +25,32 @@ SOFTWARE.
 
 */
 
-#ifndef HG_LIB_Arch_H
+#ifndef HG_LIB_ARCH_H
 
 #include "types.h"
 
 typedef struct regs {
 
-	word ax;
-	word bx;
-	word cx;
-	word dx;
+	uint16_t ax;
+	uint16_t bx;
+	uint16_t cx;
+	uint16_t dx;
 
-	word di;
-	word bp;
-	word sp;
+	uint16_t di;
+	uint16_t bp;
+	uint16_t sp;
 
-	word es;
-	word cs;
-	word ss;
-	word ds;
-	word fs;
-	word gs;
+	uint16_t es;
+	uint16_t cs;
+	uint16_t ss;
+	uint16_t ds;
+	uint16_t fs;
+	uint16_t gs;
 
 } regs;
 
-void cpuid(mem16_t string);
-void getRegs(mem16_t regs);
+void cpuid(uint16_t string);
+void getRegs(uint16_t regs);
 
-#define HG_LIB_Arch_H
+#define HG_LIB_ARCH_H
 #endif

@@ -1,5 +1,5 @@
 #PSOS Development Build
-#https://github.com/TheBenPerson/PSOS/tree/dev
+#https:/drv/github.com/TheBenPerson/PSOS/tree/dev
 
 #Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>
 
@@ -21,30 +21,28 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-export CPATH := $(shell find ../ -type d | tr '\n' ':')
-
-CF += -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
-BIN := ../../bin
-
-all: kernel.bin
-
-kernel.bin: kbd.o pit.o rtc.o spkr.o storage.o vga.o
-	gcc $(CF) kernel.c $(LF) -o kernelc.o
-	nasm -f elf stubs.asm
-	ld kernelc.o stubs.o $(BIN)/arch.o $(BIN)/math.o $(BIN)/string.o $^ -melf_i386 -r -o kernel.o
-	ld -melf_i386 -Tkernel.ld -o kernel.bin
+$(IMG)/kernel.img: $(addprefix $(OBJ)/, kernel.o $(DRIVERS) $(LIBS))
+	ld $^ -melf_i386 -r -o kernel.o
+	ld -melf_i386 -Tsrc/kernel/kernel.ld -o $@
 	rm *.o
-	mv kernel.bin $(BIN)/.
 
-kbd.o:
-	gcc $(CF) drv/kbd/kbd.c $(LF) -o kbdc.o
-	nasm -f elf drv/kbd/kbdISR.asm -o kbdISR.o
+$(OBJ)/kernel.o: src/kernel/kernel.c
+	gcc $(CF) $^ $(LF) -o kernelc.o
+	nasm -f elf src/kernel/stubs.asm -o stubs.o
+	ld kernelc.o stubs.o -melf_i386 -r -o $@
+	rm *.o
+
+$(OBJ)/kbd.o: src/kernel/drv/kbd/kbd.c src/kernel/drv/kbd/kbdISR.asm
+	gcc $(CF) src/kernel/drv/kbd/kbd.c $(LF) -o kbdc.o
+	nasm -f elf src/kernel/drv/kbd/kbdISR.asm -o kbdISR.o
 	ld -r kbdc.o kbdISR.o -melf_i386 -o $@
+	rm *.o
 
-pit.o:
-	gcc $(CF) drv/pit/pit.c $(LF) -o pitc.o
-	nasm -f elf drv/pit/pitISR.asm -o pitISR.o
+$(OBJ)/pit.o: src/kernel/drv/pit/pit.c src/kernel/drv/pit/pitISR.asm
+	gcc $(CF) src/kernel/drv/pit/pit.c $(LF) -o pitc.o
+	nasm -f elf src/kernel/drv/pit/pitISR.asm -o pitISR.o
 	ld -r pitc.o pitISR.o -melf_i386 -o $@
+	rm *.o
 
-%.o: drv/*/%.c
+$(OBJ)/%.o: src/kernel/drv/*/%.c
 	gcc $(CF) $^ $(LF) -o $@

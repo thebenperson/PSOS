@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include "arch.h"
+#include "types.h"
 #include "usr.h"
 
 void main() {
@@ -33,7 +34,7 @@ void main() {
 	struct regs regs;
 	getRegs(&regs);
 
-	word mem = 0xFFFF - regs.sp;
+	uint16_t mem = 0xFFFF - regs.sp;
 	bool kib = false;
 
 	if (mem >= 1024) {

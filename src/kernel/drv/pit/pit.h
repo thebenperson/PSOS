@@ -25,12 +25,12 @@ SOFTWARE.
 
 */
 
-#ifndef HG_Kernel_PIT_H
+#ifndef PSOS_PIT_H
 
 #include "types.h"
 
 extern void initPIT();
-extern void ksleep(size_t mili);
+extern void ksleep(uint16_t mili);
 
-#define HG_Kernel_PIT_H
+#define PSOS_PIT_H
 #endif

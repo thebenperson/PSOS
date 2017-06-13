@@ -28,13 +28,13 @@ SOFTWARE.
 #include "types.h"
 #include "usr.h"
 
-word syscall(byte call, word arg1, word arg2, word arg3) {
+uint16_t syscall(uint8_t call, uint16_t arg1, uint16_t arg2, uint16_t arg3) {
 
-	word retval;
+	uint16_t retval;
 
 	asm("int 0x20"
 		: "=a" (retval)
-		: "b" ((word) call), "c" ((dword) arg1), "S" ((dword) arg2), "D" ((dword) arg3));
+		: "b" ((uint16_t) call), "c" ((uint32_t) arg1), "S" ((uint32_t) arg2), "D" ((uint32_t) arg3));
 
 	return retval;
 }

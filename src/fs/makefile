@@ -21,27 +21,19 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 
-export CPATH := $(shell find ../ -type d | tr '\n' ':')
+PROG := sh.bin help.bin beep.bin clear.bin date.bin free.bin lscpu.bin vgatest.bin
 
-BIN := ../../bin
+$(IMG)/fs.img: $(addprefix $(FS)/, $(PROG))
+	nasm -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE) src/fs/fat16.asm -f bin -o $@
 
-all: fs.img sh.bin help.bin beep.bin clear.bin date.bin free.bin lscpu.bin vgatest.bin
+$(FS)/free.bin: $(addprefix $(OBJ)/, free.o usr.o arch.o)
+	ld -melf_i386 $^ -Tsrc/fs/bin.ld -o $@
 
-fs.img: fat16.asm
-	nasm -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE) $^ -f bin -o $@
-	mv $@ $(BIN)/$@
+$(FS)/lscpu.bin: $(addprefix $(OBJ)/, lscpu.o usr.o arch.o)
+	ld -melf_i386 $^ -Tsrc/fs/bin.ld -o $@
 
-free.bin: free/main.c
-	gcc $(CF) $^ $(LF) -o free.o
-	ld -melf_i386 free.o $(BIN)/usr.o $(BIN)/arch.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
+$(FS)/%.bin: $(addprefix $(OBJ)/, %.o usr.o)
+	ld -melf_i386 $^ -Tsrc/fs/bin.ld -o $@
 
-lscpu.bin: lscpu/main.c
-	gcc $(CF) $^ $(LF) -o lscpu.o
-	ld -melf_i386 lscpu.o $(BIN)/usr.o $(BIN)/arch.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
-
-%.bin: %/main.c
-	gcc $(CF) $^ $(LF) -o %.o
-	ld -melf_i386 %.o $(BIN)/usr.o -Tbin.ld -o $(BIN)/$@
-	rm *.o
+$(OBJ)/%.o: src/fs/%/main.c
+	gcc $(CF) $^ $(LF) -o $@

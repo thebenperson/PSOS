@@ -29,9 +29,9 @@ SOFTWARE.
 #include "pit.h"
 #include "types.h"
 
-void kbeep(size_t freq, size_t dur) {
+void kbeep(uint16_t freq, uint16_t dur) {
 
-	byte val = inb(0x61);
+	uint8_t val = inb(0x61);
 	val |= 0x3;
 
 	if (freq != 0xFFFF) {

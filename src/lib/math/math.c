@@ -28,9 +28,14 @@ SOFTWARE.
 #include "math.h"
 #include "types.h"
 
+int abs(int a) {
+
+	return (a > 0) ? a : -a;
+
+}
+
 float sin(float a) {
 
-	asm("fninit");
 	asm("fsin"
 		: "=t" (a)
 		: "0" (a));
@@ -39,11 +44,21 @@ float sin(float a) {
 
 }
 
-word pow(word a, byte b) {
+float sqrt(float a) {
 
-	word n = 1;
+	asm("fsqrt"
+		: "=t" (a)
+		: "0" (a));
 
-	for (byte i = 0; i < b; i++)
+	return a;
+
+}
+
+float pow(float a, uint8_t b) {
+
+	float n = 1;
+
+	for (uint8_t i = 0; i < b; i++)
 		n *= a;
 
 	return n;

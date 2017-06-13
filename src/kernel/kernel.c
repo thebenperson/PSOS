@@ -29,22 +29,23 @@ SOFTWARE.
 #include "kbd.h"
 #include "pit.h"
 #include "rtc.h"
+#include "spkr.h"
 #include "storage.h"
 #include "vga.h"
 #include "kernel.h"
 #include "math.h"
 #include "types.h"
 
-byte kernelSize;
+uint8_t kernelSize;
 bool syscalled = false;
-word uSegment = KERNEL_SEGMENT;
+uint16_t uSegment = KERNEL_SEGMENT;
 char versionString[] =
 "PSOS (Pretty Simple/Stupid Operating System) Development Build\n"
 "Copyright (C) 2016 - 2017 Ben Stockett <thebenstockett@gmail.com>\n";
 
-bool kexec(mem16_t path);
+bool kexec(uint16_t path);
 void initKernel();
-void panic(mem16_t reason);
+void panic(uint16_t reason);
 
 extern void syscallISR();
 
@@ -62,22 +63,72 @@ KENTRY void kmain() {
 
 }
 
-bool kexec(mem16_t path) {
+NORET void errOpcode() {
+
+	asm("mov ax, cs");
+	asm("mov ds, ax");
+	asm("mov ss, ax");
+
+	panic("Invalid Opcode");
+
+}
+
+void initKernel() {
+
+	asm("mov es, %0" :: "r" (0x7C0));
+	asm("mov %0, es:[0x1FD]" : "=r" (kernelSize)); //get kernel size
+
+	kinstallISR(0x6, KERNEL_SEGMENT, errOpcode); //install invalid opcode handler
+	kinstallISR(0x20, KERNEL_SEGMENT, syscallISR); //install syscall handler
+
+	initKBD();
+	initPIT();
+	initRTC();
+	initStorage();
+	initVGA();
+
+}
+
+NORET void panic(uint16_t reason) {
+
+	vAttr = BG_RED;
+	kclearText();
+
+	syscalled = false;
+	kputs("KERNEL PANIC: ");
+	kputs(reason);
+
+	ksetCursor(false);
+
+	HANG();
+
+}
+
+void kinstallISR(uint8_t num, uint16_t segment, uint16_t offset) {
+
+	asm("mov es, %0" :: "r" (0));
+
+	asm("mov es:[%0], %1" :: "b" (num * 4), "r" (offset));
+	asm("movw es:[bx + 2], %0" :: "r" (segment));
+
+}
+
+bool kexec(uint16_t path) {
 
 	File file;
 
 	bool result = openFile(path, &file);
 	if (!result) return false;
 
-	word tSegment = uSegment;
+	uint16_t tSegment = uSegment;
 	uSegment += (((1 + kernelSize) * 512) / 16);
 
 	result = loadFile(&file, uSegment, 0);
 	if (result) {
 
-		word tTunnel = kTunnel;
+		uint16_t tTunnel = kTunnel;
 
-		word tCallback = callback;
+		uint16_t tCallback = callback;
 		callback = NULL;
 
 		kinstallISR(0x21, uSegment, 0); //maybe there's a better way?
@@ -100,41 +151,5 @@ bool kexec(mem16_t path) {
 
 	uSegment = tSegment;
 	return result;
-
-}
-
-void initKernel() {
-
-	asm("mov es, %0" :: "r" (0x7C0));
-	asm("mov %0, es:[0x1FD]" : "=r" (kernelSize)); //get kernel size
-
-	kinstallISR(0x20, KERNEL_SEGMENT, syscallISR); //install syscall handler
-
-	initKBD();
-	initPIT();
-	initRTC();
-	initStorage();
-	initVGA();
-
-}
-
-void kinstallISR(byte num, mem16_t segment, mem16_t offset) {
-
-	asm("mov es, %0" :: "r" (0));
-
-	asm("mov es:[%0], %1" :: "b" (num * 4), "r" (offset));
-	asm("movw es:[bx + 2], %0" :: "r" (segment));
-
-}
-
-__attribute__((noreturn)) void panic(mem16_t reason) {
-
-	vAttr = BG_RED;
-	kclearText();
-
-	kputs("KERNEL PANIC: ");
-	kputs(reason);
-
-	HANG();
 
 }

@@ -25,7 +25,7 @@ Here is what I hope to accomplish in the next version:
 - ~~Implement filesystem~~ **(done)**
 - Implement VESA driver
 
-##### Check out the *dev* tree for the latest build
+##### Check out the *(dev tree)[https://github.com/TheBenPerson/PSOS/tree/dev]* for the latest build
 
 #### Compiling:
 

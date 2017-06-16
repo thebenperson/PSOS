@@ -33,7 +33,8 @@ Ignore the other directories and their contents. (Or don't. I don't care.)
 If you want to access the FAT16 filesystem in the image on an OS other than PSOS, use the PSOS.img file. The ISO image will boot fine, but you can't access the filesystem on it.
 To install PSOS on a storage device, run `dd if=bin/PSOS.img of=/dev/device_name && sync`.
 
-***Please do not accidentally install PSOS on your hard drive.*** If you do, make sure to send me a video of it so I can laugh at you.
+***Please do not accidentally install PSOS on your hard drive.***
+If you do, make sure to send me a video of it so I can laugh at you.
 
 ### Running:
 

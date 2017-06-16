@@ -48,6 +48,6 @@ If you do, make sure to send me a video of it so I can laugh at you.
 ### Running:
 
 PSOS.bin is a floppy image, so some emulators might have trouble with the format.
-If you have trouble, try emulating it as a floppy drive
+If you have trouble, try emulating it as a floppy drive.
 
 PSOS uses BIOS functions to operate. For systems using UEFI, you may need to enable legacy support in your firmware settings.

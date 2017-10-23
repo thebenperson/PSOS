@@ -35,7 +35,7 @@ LIBS := arch.o math.o string.o
 export CPATH := $(shell find src -type d | tr '\n' ':')
 DEF := -DKERNEL_SEGMENT=$(KERNEL_SEGMENT) -DCLUSTERS=$(CLUSTERS) -DENTRIES=$(ENTRIES) -DFAT_SIZE=$(FAT_SIZE)
 CF := $(DEF) -masm=intel -Wno-int-conversion -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -march=i386 -m16
-LF := -c -ffreestanding -Os
+LF := -c -ffreestanding -Os -fno-pie -fno-pic -fno-stack-protector
 
 #build directories
 ROOT := bin

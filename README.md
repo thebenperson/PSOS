@@ -5,6 +5,8 @@
 
 As I am working on PSOS, I will upload the latest build here.
 
+[![screenshot.png](res/screenshot.png)](res/video.mp4)
+
 ### Features:
 
 - A FAT16 filesystem (read only for now)

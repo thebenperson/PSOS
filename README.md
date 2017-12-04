@@ -5,7 +5,7 @@
 
 As I am working on PSOS, I will upload the latest build here.
 
-[![screenshot.png](res/screenshot.png)](res/video.mp4)
+![video.gif](res/video.gif)
 
 ### Features:
 

@@ -5,7 +5,7 @@
 
 As I am working on PSOS, I will upload the latest build here.
 
-![video.gif](res/video.gif)
+![video.gif](https://github.com/TheBenPerson/PSOS/blob/doc/dev/res/video.gif)
 
 ### Features:
 

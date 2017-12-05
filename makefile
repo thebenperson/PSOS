@@ -49,8 +49,14 @@ all: $(addprefix $(ROOT)/, PSOS.img PSOS.iso)
 
 $(ROOT)/PSOS.img: $(addprefix $(IMG)/, loader.img kernel.img fs.img)
 	cat $^ > $@
+	@setterm --foreground red
+	#
+	# root will only be used for mounting PSOS.img to add the rootfs
+	# check the makefile if you don't believe me
+	#
+	@setterm --default
 	sudo mount $@ mnt
-	sudo cp $(FS)/* mnt/. > /dev/null
+	sudo cp -r $(FS)/* mnt/. > /dev/null
 	sudo umount mnt
 	cp $@ $(ISO)/.
 
